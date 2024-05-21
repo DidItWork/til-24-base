@@ -9,10 +9,11 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 class ASRManager:
     def __init__(self):
         # initialize the model here
-        # Load the model and processo0r
-        # model_name = "openai/whisper-tiny"
-        model_path = "/workspace/models/whisper"
-        processor_path = "/workspace/models/processor"
+        # Load the model and processor
+        # model_path = "/workspace/models/whisper"
+        # processor_path = "/workspace/models/processor"
+        model_path = "openai/whisper-tiny"
+        processor_path = "openai/whisper-tiny"
         self.model = WhisperForConditionalGeneration.from_pretrained(model_path).to(device)
         self.processor = AutoProcessor.from_pretrained(processor_path)
 
