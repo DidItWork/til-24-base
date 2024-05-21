@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import soundfile as sf
-from transformers import AutoProcessor, Wav2Vec2Processor, WhisperForConditionalGeneration
+from transformers import AutoProcessor, WhisperProcessor, Wav2Vec2Processor, WhisperForConditionalGeneration
 import io
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -10,15 +10,14 @@ class ASRManager:
     def __init__(self):
         # initialize the model here
         # Load the model and processo0r
-        model_name = "openai/whisper-tiny"
-        # self.model = WhisperForConditionalGeneration.from_pretrained("/workspace/models/whisper_large_v3").to(device)
-        # self.processor = Wav2Vec2Processor.from_pretrained("/workspace/models/wav2vec2prrocessor")
-        self.model = WhisperForConditionalGeneration.from_pretrained(model_name).to(device)
-        # self.processor = Wav2Vec2Processor.from_pretrained("asr/src/models/wav2vec2prrocessor")
-        self.processor = AutoProcessor.from_pretrained(model_name)
+        # model_name = "openai/whisper-tiny"
+        model_path = "/workspace/models/whisper"
+        processor_path = "/workspace/models/processor"
+        self.model = WhisperForConditionalGeneration.from_pretrained(model_path).to(device)
+        self.processor = AutoProcessor.from_pretrained(processor_path)
 
-        # self.model.save_pretrained("../models/whisper_large_v3")
-        # self.processor.save_pretrained("../models/wav2vec2prrocessor")
+        # self.model.save_pretrained("asr/src/models/whisper")
+        # self.processor.save_pretrained("asr/src/models/processor")
 
     def transcribe(self, audio_bytes: bytes) -> str:
         # perform ASR transcription
