@@ -9,16 +9,19 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 class ASRManager:
     def __init__(self):
         # initialize the model here
-        # Load the model and processo0r
-        model_name = "openai/whisper-tiny"
+        # Load the model and processor
+        # model_path = "openai/whisper-tiny.en"
+        # processor_path = "openai/whisper-tiny.en"
+        model_path = "/home/benluo/til-24-base/asr/src/models/whisper-ft/checkpoint-5000"
+        processor_path = "/home/benluo/til-24-base/asr/src/models/processor"
         # self.model = WhisperForConditionalGeneration.from_pretrained("/workspace/models/whisper_large_v3").to(device)
         # self.processor = Wav2Vec2Processor.from_pretrained("/workspace/models/wav2vec2prrocessor")
-        self.model = WhisperForConditionalGeneration.from_pretrained(model_name).to(device)
+        self.model = WhisperForConditionalGeneration.from_pretrained(model_path).to(device)
         # self.processor = Wav2Vec2Processor.from_pretrained("asr/src/models/wav2vec2prrocessor")
-        self.processor = AutoProcessor.from_pretrained(model_name)
+        self.processor = AutoProcessor.from_pretrained(processor_path)
 
-        # self.model.save_pretrained("../models/whisper_large_v3")
-        # self.processor.save_pretrained("../models/wav2vec2prrocessor")
+        # self.model.save_pretrained("/home/benluo/til-24-base/asr/src/models/whisper")
+        # self.processor.save_pretrained("/home/benluo/til-24-base/asr/src/models/processor")
 
     def transcribe(self, audio_bytes: bytes) -> str:
         # perform ASR transcription

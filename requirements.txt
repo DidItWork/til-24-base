@@ -4,3 +4,4 @@ requests
 fastapi
 uvicorn[standard]
 python-dotenv
+evaluate
