@@ -12,7 +12,7 @@ class ASRManager:
         # Load the model and processor
         # model_path = "openai/whisper-tiny.en"
         # processor_path = "openai/whisper-tiny.en"
-        model_path = "/home/benluo/til-24-base/asr/src/models/whisper-ft/checkpoint-5000"
+        model_path = "/home/benluo/til-24-base/asr/src/models/whisper-ft/checkpoint-4000"
         processor_path = "/home/benluo/til-24-base/asr/src/models/processor"
         # self.model = WhisperForConditionalGeneration.from_pretrained("/workspace/models/whisper_large_v3").to(device)
         # self.processor = Wav2Vec2Processor.from_pretrained("/workspace/models/wav2vec2prrocessor")
