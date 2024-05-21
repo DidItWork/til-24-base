@@ -1,15 +1,24 @@
 import numpy as np
 import torch
 import soundfile as sf
-from transformers import Wav2Vec2Processor, WhisperForConditionalGeneration
+from transformers import AutoProcessor, Wav2Vec2Processor, WhisperForConditionalGeneration
+import io
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 class ASRManager:
     def __init__(self):
         # initialize the model here
         # Load the model and processo0r
-        model_name = "openai/whisper-large-v3"
-        self.model = WhisperForConditionalGeneration.from_pretrained(model_name)
-        self.processor = Wav2Vec2Processor.from_pretrained(model_name)
+        model_name = "openai/whisper-tiny"
+        # self.model = WhisperForConditionalGeneration.from_pretrained("/workspace/models/whisper_large_v3").to(device)
+        # self.processor = Wav2Vec2Processor.from_pretrained("/workspace/models/wav2vec2prrocessor")
+        self.model = WhisperForConditionalGeneration.from_pretrained(model_name).to(device)
+        # self.processor = Wav2Vec2Processor.from_pretrained("asr/src/models/wav2vec2prrocessor")
+        self.processor = AutoProcessor.from_pretrained(model_name)
+
+        # self.model.save_pretrained("../models/whisper_large_v3")
+        # self.processor.save_pretrained("../models/wav2vec2prrocessor")
 
     def transcribe(self, audio_bytes: bytes) -> str:
         # perform ASR transcription
@@ -17,7 +26,7 @@ class ASRManager:
         # Function to decode audio bytes
         def decode_audio_bytes(audio_bytes):
             # Use soundfile to read the bytes
-            audio, sample_rate = sf.read(audio_bytes)
+            audio, sample_rate = sf.read(io.BytesIO(audio_bytes))
             return audio, sample_rate
         
         audio_array, sample_rate = decode_audio_bytes(audio_bytes)
@@ -27,9 +36,12 @@ class ASRManager:
 
         # Perform inference with the model
         with torch.no_grad():
-            generated_ids = self.model.generate(inputs.input_values)
+            generated_ids = self.model.generate(inputs.input_features.to(device))
 
         # Decode the generated transcription
         transcription = self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
         return transcription
+
+if __name__ == "__main__":
+    asr_manager = ASRManager()

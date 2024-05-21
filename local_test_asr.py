@@ -8,8 +8,11 @@ from pathlib import Path
 from scoring.asr_eval import asr_eval
 from dotenv import load_dotenv
 import os
+from asr.src.ASRManager import ASRManager
 
 load_dotenv()
+
+asr_manager = ASRManager()
 
 TEAM_NAME = os.getenv("TEAM_NAME")
 TEAM_TRACK = os.getenv("TEAM_TRACK")
@@ -52,21 +55,15 @@ def run_batched(
     results = []
     for index in tqdm(range(0, len(instances), batch_size)):
         _instances = instances[index : index + batch_size]
-        response = requests.post(
-            "http://localhost:5001/stt",
-            data=json.dumps(
-                {
-                    "instances": [
-                        {"key": _instance["key"], "b64": _instance["b64"]}
-                        for _instance in _instances
-                    ]
-                }
-            ),
-        )
-        # response = {
-        #     "predictions": []
-        # }
-        _results = response.json()["predictions"]
+        predictions = []
+        for instance in _instances:
+            # each is a dict with one key "b64" and the value as a b64 encoded string
+            audio_bytes = base64.b64decode(instance["b64"])
+
+            transcription = asr_manager.transcribe(audio_bytes)
+            predictions.append(transcription)
+
+        _results = predictions
         results.extend(
             [
                 {
