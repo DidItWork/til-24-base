@@ -1,13 +1,13 @@
 protobuf==3.20.3
-transformers==4.31.0
+git+https://github.com/huggingface/transformers
 langchain-community
-langchain-huggingface
 einops==0.6.1
 xformers
-accelerate==0.20.3
+accelerate
 kor==0.12.0
 langchain==0.0.225
-bitsandbytes==0.39.0
+bitsandbytes
+flash_attn
 sentencepiece==0.1.99
 loralib
 spacy==3.5.3
