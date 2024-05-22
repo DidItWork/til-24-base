@@ -88,7 +88,7 @@ class VLMManager:
         bbox = predictions["boxes"][torch.argmax(predictions["scores"])].to(dtype=torch.int).tolist()
         x1, y1, x2, y2 = bbox
 
-        # print(caption, bbox)
+        print(caption, bbox)
         # return [int(x1), int(y1), int(x2-x1), int(y2-y1)]
         return [x1,y1,x2-x1,y2-y1]
 
