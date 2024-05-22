@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import soundfile as sf
-from transformers import AutoProcessor, Wav2Vec2Processor, WhisperForConditionalGeneration
+from transformers import AutoProcessor, WhisperForConditionalGeneration
 import io
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -26,20 +26,15 @@ class ASRManager:
     def transcribe(self, audio_bytes: bytes) -> str:
         # perform ASR transcription
 
-        # Function to decode audio bytes
-        def decode_audio_bytes(audio_bytes):
-            # Use soundfile to read the bytes
-            audio, sample_rate = sf.read(io.BytesIO(audio_bytes))
-            return audio, sample_rate
-        
-        audio_array, sample_rate = decode_audio_bytes(audio_bytes)
+        # Use soundfile to read the bytes
+        audio_array, sample_rate = sf.read(io.BytesIO(audio_bytes))
 
         # Convert the audio array to the format expected by the processor
-        inputs = self.processor(audio_array, sampling_rate=sample_rate, return_tensors="pt")
+        inputs = self.processor(audio_array, sampling_rate=sample_rate, return_tensors="pt").input_features
 
         # Perform inference with the model
         with torch.no_grad():
-            generated_ids = self.model.generate(inputs.input_features.to(device))
+            generated_ids = self.model.generate(inputs.to(device))
 
         # Decode the generated transcription
         transcription = self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
