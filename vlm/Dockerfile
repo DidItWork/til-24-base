@@ -20,6 +20,9 @@ WORKDIR /workspace
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
+#Qwen Quantization Setup
+RUN git clone https://github.com/JustinLin610/AutoGPTQ.git & pip install -v AutoGPTQ/
+
 # copy the rest of the files into the container
 COPY src .
 

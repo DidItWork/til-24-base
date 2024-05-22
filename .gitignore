@@ -1,4 +1,5 @@
 models/
+AutoGPTQ/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -20,6 +21,7 @@ lib64/
 parts/
 sdist/
 var/
+data/
 wheels/
 share/python-wheels/
 *.egg-info/
