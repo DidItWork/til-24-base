@@ -16,6 +16,9 @@ ENV PIP_ROOT_USER_ACTION=ignore
 RUN pip install -U pip
 WORKDIR /workspace
 
+# uninstall torch_xla
+RUN pip uninstall -y torch_xla
+
 # install other requirements
 COPY requirements.txt .
 RUN pip install -r requirements.txt
