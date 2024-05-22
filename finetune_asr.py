@@ -137,7 +137,7 @@ def main():
 
     all_instances = ASRDataset("asr.jsonl", input_dir, feature_extractor, tokenizer)
 
-    train_set, test_set = random_split(all_instances, [0.8, 0.2])
+    train_set, test_set = random_split(all_instances, [0.9, 0.1])
 
     metric = evaluate.load("wer")
 
@@ -154,8 +154,8 @@ def main():
         per_device_eval_batch_size=8,
         predict_with_generate=True,
         generation_max_length=225,
-        save_steps=1000,
-        eval_steps=1000,
+        save_steps=5000,
+        eval_steps=5000,
         logging_steps=25,
         report_to=["tensorboard"],
         load_best_model_at_end=True,
@@ -189,7 +189,7 @@ def main():
     trainer = Seq2SeqTrainer(
         args=training_args,
         model=model,
-        train_dataset=train_set,
+        train_dataset=all_instances,
         eval_dataset=test_set,
         data_collator=data_collator,
         compute_metrics=compute_metrics,
