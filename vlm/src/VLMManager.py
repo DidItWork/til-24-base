@@ -12,16 +12,15 @@ class VLMManager:
         
         # model_name = "Qwen/Qwen-VL-Chat-Int4"
         # model_name = "microsoft/kosmos-2-patch14-224"
-        model_path = "google/owlv2-base-patch16-ensemble"
-        processor_path = "google/owlv2-base-patch16-ensemble"
+        # model_path = "google/owlv2-base-patch16-ensemble"
+        # processor_path = "google/owlv2-base-patch16-ensemble"
+        model_path = "/workspace/models/model"
+        processor_path = "/workspace/models/processor"
 
         self.image_width = 1520
         self.image_height = 870
 
         self.target_sizes = torch.tensor([[self.image_height, self.image_width]])
-
-        # model_path = "/workspace/models/model"
-        # processor_path = "/workspace/models/processor"
         
         # self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
         # self.model = AutoModelForCausalLM.from_pretrained(model_name, device_map="cuda", trust_remote_code=True).eval()
