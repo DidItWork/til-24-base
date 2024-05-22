@@ -108,7 +108,7 @@ Teams are also recommended to test their Docker containers prior to submission u
 To build your container, run the following command from where your Dockerfile is located, which should be the directory of your container (e.g. `/asr`). Be sure to also update the tag (the `-t` flag) with your team name and the model task (`asr`, `nlp`, `vlm`) accordingly.
 
 ```bash
-docker build -t TEAM-NAME-asr .
+docker build -t backstreet-boys-asr .
 ```
 
 Note that while you _can_ tag your containers anything you want, we recommend you name it something like `{TEAM-NAME}-{TASK}`, and all examples will follow this naming convention.
