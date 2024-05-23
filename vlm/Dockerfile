@@ -12,17 +12,23 @@ ENV PYTHONUNBUFFERED 1
 # pip gives a warning if you install packages as root
 # set this flag to just ignore the warning
 ENV PIP_ROOT_USER_ACTION=ignore
+ENV CUDA_HOME=/usr/local/cuda \
+     TORCH_CUDA_ARCH_LIST="6.0 6.1 7.0 7.5 8.0 8.6+PTX" \
+     SETUPTOOLS_USE_DISTUTILS=stdlib
 
 RUN pip install -U pip
 WORKDIR /workspace
+
+#For OpenCV
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 
 # install other requirements
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Grounding DINO Setup
-RUN git clone https://github.com/IDEA-Research/GroundingDINO
-RUN pip install -e GroundingDINO/
+RUN git clone https://github.com/IDEA-Research/GroundingDINO.git
+RUN cd GroundingDINO && pip install -e .
 
 # copy the rest of the files into the container
 COPY src .

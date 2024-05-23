@@ -128,7 +128,7 @@ class VLMManager:
         # processor_path = "/workspace/models/processor"
 
         #Grounding DINO
-        config_file = "GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
+        config_file = "GroundingDINO_SwinB_cfg.py"  # change the path of the model config file
         checkpoint_path = "model_weights0.pth"  # change the path of the model
         self.box_threshold = 0.2
         self.text_threshold = 1.0
