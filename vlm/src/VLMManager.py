@@ -82,10 +82,13 @@ class VLMManager:
                 attention_mask=inputs["attention_mask"].to(device),
                 pixel_values=inputs["pixel_values"].to(device),
             )
-            predictions = self.processor.post_process_object_detection(outputs, threshold=0.1, target_sizes=self.target_sizes)[0]
+            predictions = self.processor.post_process_object_detection(outputs, threshold=0.0, target_sizes=self.target_sizes)[0]
 
-        bbox = predictions["boxes"][torch.argmax(predictions["scores"])].to(dtype=torch.int).tolist()
-        x1, y1, x2, y2 = bbox
+        if len(predictions["boxes"]):
+            bbox = predictions["boxes"][torch.argmax(predictions["scores"])].to(dtype=torch.int).tolist()
+            x1, y1, x2, y2 = bbox
+        else:
+            return [0,0,0,0]
 
         # print(caption, bbox)
         # return [int(x1), int(y1), int(x2-x1), int(y2-y1)]
