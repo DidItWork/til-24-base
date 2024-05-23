@@ -1,5 +1,7 @@
 models/
 AutoGPTQ/
+Grounding-Dino-FineTuning/
+GroundingDINO/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
