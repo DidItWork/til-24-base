@@ -1,6 +1,7 @@
 models/
 AutoGPTQ/
 GroundingDINO/
+Grounding-Dino-FineTuning/
 
 #Checkpoints
 *.pth
