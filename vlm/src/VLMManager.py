@@ -128,8 +128,8 @@ class VLMManager:
         # processor_path = "/workspace/models/processor"
 
         #Grounding DINO
-        config_file = "/workspace/GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
-        checkpoint_path = "/workspace/model_weights0.pth"  # change the path of the model
+        config_file = "GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
+        checkpoint_path = "model_weights0.pth"  # change the path of the model
         self.box_threshold = 0.2
         self.text_threshold = 1.0
         self.token_spans = None
@@ -184,14 +184,14 @@ class VLMManager:
             "labels": pred_phrases,
         }
 
-        print(pred_dict)
+        # print(pred_dict)
 
         if pred_dict["boxes"].shape[0]==0:
             return [0,0,0,0]
 
         x1, y1, w, h = (pred_dict["boxes"][0]*torch.Tensor([size[0],size[1],size[0],size[1]])).tolist()
 
-        print(int(x1-w/2),int(y1-h/2),int(w),int(h))
+        # print(int(x1-w/2),int(y1-h/2),int(w),int(h))
 
         return [int(x1-w/2),int(y1-h/2),int(w),int(h)]
 
