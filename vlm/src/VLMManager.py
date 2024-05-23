@@ -32,6 +32,8 @@ class VLMManager:
         # self.model.save_pretrained("vlm/src/models/model")
         # self.processor.save_pretrained("vlm/src/models/processor")
 
+        print(self.model)
+
 
     def identify(self, image: bytes, caption: str) -> List[int]:
         # perform object detection with a vision-language model
@@ -83,6 +85,7 @@ class VLMManager:
                 attention_mask=inputs["attention_mask"].to(device),
                 pixel_values=inputs["pixel_values"].to(device),
             )
+            print(outputs)
             predictions = self.processor.post_process_object_detection(outputs, threshold=0.1, target_sizes=self.target_sizes)[0]
 
         bbox = predictions["boxes"][torch.argmax(predictions["scores"])].to(dtype=torch.int).tolist()
