@@ -31,8 +31,8 @@ def main():
 
     with open(input_dir / "vlm.jsonl", "r") as f:
         for line in f:
-            # if counter > 3:
-            #     break
+            if counter > 100:
+                break
             if line.strip() == "":
                 continue
             instance = json.loads(line.strip())
@@ -73,9 +73,9 @@ def run_batched(
 ) -> List[Dict[str, str | int]]:
     # split into batches
     results = []
-    predictions = []
 
     for index in tqdm(range(0, len(instances), batch_size)):
+        predictions = []
         _instances = instances[index : index + batch_size]
         
         for instance in _instances:
@@ -83,6 +83,7 @@ def run_batched(
             predictions.append(vlm_manager.identify(image_bytes, instance["caption"]))
 
         _results = predictions
+        print(_results)
         results.extend(
             [
                 {
