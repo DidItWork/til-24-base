@@ -130,7 +130,7 @@ class VLMManager:
         #Grounding DINO
         config_file = "GroundingDINO_SwinB_cfg.py"  # change the path of the model config file
         checkpoint_path = "model_weights0.pth"  # change the path of the model
-        self.box_threshold = 0.2
+        self.box_threshold = 0.0
         self.text_threshold = 1.0
         self.token_spans = None
         self.cpu_only = not torch.cuda.is_available()
@@ -184,14 +184,27 @@ class VLMManager:
             "labels": pred_phrases,
         }
 
+        # print(pred_dict["labels"][0])
+
+        # print(pred_dict)
+
+        #Process labels
+        # for i in range(len(pred_dict["labels"])):
+
+        #     # print(pred_dict["labels"][i])
+            
+        #     pred_dict["labels"][i] = float(pred_dict["labels"][i].split("(")[-1].strip(")")) if caption.lower() in pred_dict["labels"][i] else 0.0
+
+            # print(caption.lower(), pred_dict["labels"][i])
+
         # print(pred_dict)
 
         if pred_dict["boxes"].shape[0]==0:
             return [0,0,0,0]
 
-        x1, y1, w, h = (pred_dict["boxes"][0]*torch.Tensor([size[0],size[1],size[0],size[1]])).tolist()
+        x1, y1, w, h = (pred_dict["boxes"][argmax(pred_dict["labels"])]*torch.Tensor([size[0],size[1],size[0],size[1]])).tolist()
 
-        # print(int(x1-w/2),int(y1-h/2),int(w),int(h))
+        # print(int(x1-w/2),int(y1-h/2),int(w),int(h), argmax(pred_dict["labels"]), pred_dict["labels"][argmax(pred_dict["labels"])])
 
         return [int(x1-w/2),int(y1-h/2),int(w),int(h)]
 
