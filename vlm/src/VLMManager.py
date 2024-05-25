@@ -128,10 +128,10 @@ class VLMManager:
         # processor_path = "/workspace/models/processor"
 
         #Grounding DINO
-        config_file = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/groundingdino/config/GroundingDINO_SwinB_cfg.py"  # change the path of the model config file
-        checkpoint_path = "/home/benluo/til-24-base/vlm/src/model_weights0.pth"  # change the path of the model
+        config_file = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/groundingdino/config/GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
+        checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swint_ogc.pth"  # change the path of the model
         self.box_threshold = 0.0
-        self.text_threshold = 1
+        self.text_threshold = 1.0
         self.token_spans = None
         self.cpu_only = not torch.cuda.is_available()
         
@@ -185,6 +185,12 @@ class VLMManager:
         }
 
         # print(pred_dict)
+
+        # for i, label in enumerate(pred_dict["labels"]):
+        #     if caption not in label:
+        #         pred_dict["labels"][i] = 0.0
+        #     else:
+        #         pred_dict["labels"][i] = float(pred_dict["labels"][i].split("(")[-1].strip(")"))
 
         if pred_dict["boxes"].shape[0]==0:
             return [0,0,0,0]
