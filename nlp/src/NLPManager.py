@@ -1,154 +1,92 @@
 from typing import Dict
-import json
 import logging
 
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    AIMessagePromptTemplate, # I included this one so you know you'll have it but we won't be using it
-    HumanMessagePromptTemplate
-)
 
-from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
-from langchain.output_parsers import PydanticOutputParser
-
-from langchain.schema import (
-    AIMessage,
-    HumanMessage,
-    SystemMessage
-)
-
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.prompts import PromptTemplate
-from langchain_core.pydantic_v1 import BaseModel, Field
-from langchain_core.prompt_values import StringPromptValue
-from typing import List, Optional
-
-# from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
-from langchain.llms.huggingface_pipeline import HuggingFacePipeline
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from transformers import BitsAndBytesConfig
+from jsonformer.main import Jsonformer
 
 
-# Define your desired data structure.
-class Objective(BaseModel):
-    """The data to be extracted from the transcript"""
-    target: str = Field(description="Identified Target object to attack")
-    heading: str = Field(description="Heading of object in integers")
-    tool: str = Field(description="Tool to be deployed to neutralize the target")
+class HuggingFaceLLM:
+    def __init__(self, temperature=0, top_k=50, model_name="microsoft/Phi-3-mini-4k-instruct"):
+        nf4_config = BitsAndBytesConfig(
+          load_in_4bit=True,
+          bnb_4bit_quant_type="nf4",
+          bnb_4bit_use_double_quant=True,
+          bnb_4bit_compute_dtype=torch.bfloat16
+        )
+        model_path = "/workspace/models/model"
+        tokenizer_path = "/workspace/models/tokenizer"
+
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, use_fast=True)
+        self.model = AutoModelForCausalLM.from_pretrained(model_path, quantization_config=nf4_config, device_map="auto")
+
+        # self.model = AutoModelForCausalLM.from_pretrained(model_name, use_cache=True, quantization_config=nf4_config, device_map="auto")
+        # self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True, use_cache=True)
+
+        # self.model.save_pretrained("./src/models/model")
+        # self.tokenizer.save_pretrained("./src/models/tokenizer")
+
+        self.top_k = top_k
+
+    def generate(self, prompt, max_length=1024):
+        json = {
+            "type": "object",
+            "properties": {
+                "target": {"type": "string"},
+                "tool": {"type": "string"},
+                "heading": {"type": "string"},
+            }
+        }
+
+        builder = Jsonformer(
+            model=self.model,
+            tokenizer=self.tokenizer,
+            json_schema=json,
+            prompt= prompt,
+            max_string_token_length=20
+        )
+
+        print("Generating...")
+        output = builder()
+        return output
 
 class NLPManager:
     def __init__(self):
         # initialize the model here
-        # nf4_config = BitsAndBytesConfig(
-        # load_in_4bit=True,
-        # bnb_4bit_quant_type="nf4",
-        # bnb_4bit_use_double_quant=True,
-        # bnb_4bit_compute_dtype=torch.bfloat16
-        # )
+        self.llm = HuggingFaceLLM(temperature=0)
+        self.template = """
+        You are an expert admin people who will extract core information from documents
 
-#         model_id = "microsoft/Phi-3-mini-4k-instruct"
+        {content}
 
-#         tokenizer = AutoTokenizer.from_pretrained(model_id)
-#         model = AutoModelForCausalLM.from_pretrained(
-#                         model_id,
-#                         quantization_config=nf4_config,
-#                         trust_remote_code=True,
-#                         )
-        model_path = "/workspace/models/model"
-        tokenizer_path = "/workspace/models/tokenizer"
-
-        tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
-        model = AutoModelForCausalLM.from_pretrained(model_path)
-
-        pipe = pipeline("text-generation",
-                    model=model,
-                    tokenizer=tokenizer,
-                    max_new_tokens=512,
-                    )
-
-        self.llm_phi3 = HuggingFacePipeline(pipeline=pipe)
-
-        self.chain = self._create_chain()
-
-    def _create_chain(self):
-        # create the chain here
-        template = """
-        Given the transcript delimitted by triple backticks,
-        extract all key information in a structured format.
-        {format_instructions}
-        Return the JSON object only, nothing else.
-
-        Ensure the phrase 'surface-to-air missiles' is spelt with all letters and not numbers.
-
-        Here are some examples of how to perform this task:
-        TRANSCRIPT: Target is red helicopter, heading is zero one zero, tool to deploy is surface-to-air missiles.
-        OUTPUT: 'target': 'red helicopter', 'heading': '010', 'tool': 'surface-to-air missiles'
-
-        TRANSCRIPT: Target is grey and white fighter jet, heading is zero six five, tool to deploy is electromagnetic pulse.
-        OUTPUT: 'target': 'grey and white fighter jet', 'heading': '065', 'tool': 'electromagnetic pulse'
-
-        TRANSCRIPT: Alfa, Echo, Mike Papa, deploy EMP tool heading zero eight five, engage purple, red, and silver fighter jet.
-        OUTPUT: 'target': 'purple, red, and silver fighter jet', 'heading': '085', 'tool': 'EMP'
-
-        Now take the following transcript and extract the key information in a structured format
-        TRANSCRIPT:
-        ```{transcript}```
+        Above is the content; please try to extract all data points from the content above:
+        {data_points}
         """
-        output_parser = JsonOutputParser(pydantic_object=Objective)
 
-        prompt = PromptTemplate(
-            template=template,
-            input_variables=["transcript"],
-            partial_variables={"format_instructions": output_parser.get_format_instructions()},
-        )
-
-        chain = prompt | self.llm_phi3 | self._extract_json_after_response
-        return chain
-
-    def _clean_json_string(self, json_str: str) -> str:
-        # Find the start of the first JSON object
-        start = json_str.find('{')
-
-        # Find the end of the first JSON object
-        end = json_str.find('}') + 1
-
-        # Extract the substring from 'start' to 'end'
-        cleaned_json_str = json_str[start:end]
-
-        return cleaned_json_str
-
-    def _extract_json_after_response(self, message: str) -> dict:
-        # Find the start of the JSON object
-        start = message.lower().find('response') + len('response')
-
-        # Extract the substring from 'start' to the end of the message
-        json_str = message[start:].strip()
-        json_str = self._clean_json_string(json_str)
-
-        try:
-            # Parse the JSON string into a Python dictionary
-            data = json.loads(json_str)
-        except json.JSONDecodeError:
-            print(f"Error parsing JSON string: {json_str}")
-            return None
-
-        return data
+        self.default_data_points = """{
+            "target": "Identified Target object to attack",
+            "tool": "Tool to be deployed to neutralize the target",
+            "heading": "Heading of object in integers",
+        }"""
 
     def qa(self, context: str) -> Dict[str, str]:
         # perform NLP question-answering
         default_result = {"heading": "", "tool": "", "target": ""}
         try:
-            data = self.chain.invoke({"transcript": context})
+            formatted_template = self.template.format(content=context, data_points=self.default_data_points)
+            data = self.llm.generate(formatted_template)
 
             if data is None:
                 print('Failed to extract data from response: %s', context)
+                print('LLM generated response: %s', data)
                 return default_result
 
             # Validate that data is a dictionary and contains the required keys
             if not isinstance(data, dict) or not all(key in data for key in ['target', 'heading', 'tool']):
                 print('Data does not adhere to the required format: %s', data)
+                print('LLM generated response: %s', data)
                 return default_result
 
             logging.info('Successfully extracted data: %s', data)
