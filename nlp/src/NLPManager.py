@@ -16,8 +16,11 @@ class HuggingFaceLLM:
           bnb_4bit_use_double_quant=True,
           bnb_4bit_compute_dtype=torch.bfloat16
         )
-        model_path = "/workspace/models/model"
-        tokenizer_path = "/workspace/models/tokenizer"
+        # model_path = "/workspace/models/model"
+        # tokenizer_path = "/workspace/models/tokenizer"
+
+        model_path = "/home/jon/Code/hackathon/til-24-base/nlp/src/models/model"
+        tokenizer_path = "/home/jon/Code/hackathon/til-24-base/nlp/src/models/tokenizer"
 
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, use_fast=True)
         self.model = AutoModelForCausalLM.from_pretrained(model_path, quantization_config=nf4_config, device_map="auto")
@@ -59,6 +62,18 @@ class NLPManager:
         self.template = """
         You are an expert admin people who will extract core information from documents
 
+        Here are some examples of how to perform this task:
+        START_OF_EXAMPLES
+        TRANSCRIPT: Target is red helicopter, heading is zero one zero, tool to deploy is surface-to-air missiles.
+        OUTPUT: 'target': 'red helicopter', 'heading': '010', 'tool': 'surface-to-air missiles'
+
+        TRANSCRIPT: Target is grey and white fighter jet, heading is zero six five, tool to deploy is electromagnetic pulse.
+        OUTPUT: 'target': 'grey and white fighter jet', 'heading': '065', 'tool': 'electromagnetic pulse'
+
+        TRANSCRIPT: Alfa, Echo, Mike Papa, deploy EMP tool heading zero eight five, engage purple, red, and silver fighter jet.
+        OUTPUT: 'target': 'purple, red, and silver fighter jet', 'heading': '085', 'tool': 'EMP'
+        END_OF_EXAMPLES
+        
         {content}
 
         Above is the content; please try to extract all data points from the content above:
@@ -66,9 +81,9 @@ class NLPManager:
         """
 
         self.default_data_points = """{
-            "target": "Identified Target object to attack",
-            "tool": "Tool to be deployed to neutralize the target",
-            "heading": "Heading of object in integers",
+            "target": "Full characteristics description with colors of identified Target object to attack",
+            "tool": "Tool to be deployed to neutralize the target, not air defense turrets",
+            "heading": "Heading of object in integers, give all integers even if it begins with zero",
         }"""
 
     def qa(self, context: str) -> Dict[str, str]:
