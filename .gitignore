@@ -1,4 +1,13 @@
 models/
+AutoGPTQ/
+Grounding-Dino-FineTuning/
+GroundingDINO/
+mmdetection/
+weights/
+
+# Checkpoints
+*.pt
+*.pth
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

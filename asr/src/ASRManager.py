@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import soundfile as sf
-from transformers import AutoProcessor, Wav2Vec2Processor, WhisperForConditionalGeneration
+from transformers import AutoProcessor, WhisperProcessor, Wav2Vec2Processor, WhisperForConditionalGeneration
 import io
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -10,6 +10,7 @@ class ASRManager:
     def __init__(self):
         # initialize the model here
         # Load the model and processor
+
         # model_path = "openai/whisper-tiny.en"
         # processor_path = "openai/whisper-tiny.en"
         model_path = "/home/benluo/til-24-base/asr/src/models/whisper-ft/checkpoint-4000"

@@ -5,3 +5,4 @@ fastapi
 uvicorn[standard]
 python-dotenv
 evaluate
+tensorboard

@@ -111,7 +111,6 @@ class DataCollatorSpeechSeq2SeqWithPadding:
         labels_batch = self.tokenizer.pad(label_features, return_tensors="pt")
 
         #replace padding with -100 to ignore loss correctly
-        #Not sure what this does
         labels = labels_batch["input_ids"].masked_fill(labels_batch.attention_mask.ne(1), -100)
 
         #Check if begin-of-sentence is appended in previous tokenization step
@@ -137,7 +136,7 @@ def main():
 
     all_instances = ASRDataset("asr.jsonl", input_dir, feature_extractor, tokenizer)
 
-    train_set, test_set = random_split(all_instances, [0.8, 0.2])
+    train_set, test_set = random_split(all_instances, [0.9, 0.1])
 
     metric = evaluate.load("wer")
 
@@ -189,7 +188,7 @@ def main():
     trainer = Seq2SeqTrainer(
         args=training_args,
         model=model,
-        train_dataset=train_set,
+        train_dataset=all_instances,
         eval_dataset=test_set,
         data_collator=data_collator,
         compute_metrics=compute_metrics,

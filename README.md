@@ -108,7 +108,7 @@ Teams are also recommended to test their Docker containers prior to submission u
 To build your container, run the following command from where your Dockerfile is located, which should be the directory of your container (e.g. `/asr`). Be sure to also update the tag (the `-t` flag) with your team name and the model task (`asr`, `nlp`, `vlm`) accordingly.
 
 ```bash
-docker build -t TEAM-NAME-asr .
+docker build -t backstreet-boys-asr .
 ```
 
 Note that while you _can_ tag your containers anything you want, we recommend you name it something like `{TEAM-NAME}-{TASK}`, and all examples will follow this naming convention.
@@ -118,7 +118,7 @@ Note that while you _can_ tag your containers anything you want, we recommend yo
 As an example, here we run the `TEAM-NAME-asr` container built at the previous step. Be sure to update the ports based on which ports need to be exposed from your container (as per your Dockerfile). The `--gpus all` flag gives the container access to all GPUs available to the instance, and the `-d` flag runs the container in detached mode in the background.
 
 ```bash
-docker run -p 5001:5001 --gpus all -d TEAM-NAME-asr
+docker run -p 5001:5001 --gpus all -d backstreet-boys-asr
 ```
 
 To view all running containers, run:
@@ -144,8 +144,8 @@ Model submission is being handled entirely through GCP as well. You first push y
 You tag your container (`TEAM-NAME-asr` in the below example) locally with your remote repository (`repository-TEAM-NAME` below) and the artifact+tag (`TEAM-NAME-asr:latest` in the example) you want to push to. Then you run `docker push` to actually push.
 
 ```bash
-docker tag TEAM-NAME-asr asia-southeast1-docker.pkg.dev/dsta-angelhack/repository-TEAM-NAME/TEAM-NAME-asr:latest
-docker push asia-southeast1-docker.pkg.dev/dsta-angelhack/repository-TEAM-NAME/TEAM-NAME-asr:latest
+docker tag backstreet-boys-asr asia-southeast1-docker.pkg.dev/dsta-angelhack/repository-backstreet-boys/backstreet-boys-asr:latest
+docker push asia-southeast1-docker.pkg.dev/dsta-angelhack/repository-backstreet-boys/backstreet-boys-asr:latest
 ```
 
 When your model is pushed successfully, you should be able to see it under your team's repository on [Artifact Registry](https://console.cloud.google.com/artifacts/docker/dsta-angelhack/asia-southeast1).
@@ -157,7 +157,7 @@ Once your model is on Artifact Registry, you can submit it by uploading it to Mo
 Take note to update the flags `--container-health-route`, `--container-predict-route`, `--container-ports`, etc., which describe how our automation can interact with your container. For more, see the GCP Vertex AI documentation on [importing models programmatically](https://cloud.google.com/vertex-ai/docs/model-registry/import-model#import_a_model_programmatically) and all [the optional flags](https://cloud.google.com/sdk/gcloud/reference/ai/models/upload#OPTIONAL-FLAGS). The `health-route`should accept GET requests and return `200 OK` if the container is ready to receive prediction requests. The `predict-route` should accept POST requests and actually handle inference/prediction. The `ports` should be a comma-separated list (or a single value) of the ports your container has exposed.
 
 ```bash
-gcloud ai models upload --region asia-southeast1 --display-name 'TEAM-NAME-asr' --container-image-uri asia-southeast1-docker.pkg.dev/dsta-angelhack/repository-TEAM-NAME/TEAM-NAME-asr:latest --container-health-route /health --container-predict-route /stt --container-ports 5001 --version-aliases default
+gcloud ai models upload --region asia-southeast1 --display-name 'backstreet-boys-asr' --container-image-uri asia-southeast1-docker.pkg.dev/dsta-angelhack/repository-backstreet-boys/backstreet-boys-asr:latest --container-health-route /health --container-predict-route /stt --container-ports 5001 --version-aliases default
 ```
 
 Shortly after successfully running the command, you should receive a Discord notification providing a link to review the status of a batch prediction job which evalulates your model accuracy and speed. If you do not, ping `@alittleclarity` on the BH24 TIL-AI Discord server in your team's private channel.
