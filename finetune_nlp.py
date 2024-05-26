@@ -93,17 +93,17 @@ def prepare_data(json_file:str = "", data_root:Any = None, tokenizer=None) -> Da
 # Load tokenizer and model
 tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
-# # use BERT's cls token as BOS token and sep token as EOS token
-# encoder = BertGenerationEncoder.from_pretrained("google-bert/bert-base-cased", bos_token_id=101, eos_token_id=102)
-# # add cross attention layers and use BERT's cls token as BOS token and sep token as EOS token
-# decoder = BertGenerationDecoder.from_pretrained(
-#     "google-bert/bert-base-cased", add_cross_attention=True, is_decoder=True, bos_token_id=101, eos_token_id=102
-# )
-# bert2bert = EncoderDecoderModel(encoder=encoder, decoder=decoder)
+# use BERT's cls token as BOS token and sep token as EOS token
+encoder = BertGenerationEncoder.from_pretrained("google-bert/bert-base-cased", bos_token_id=101, eos_token_id=102)
+# add cross attention layers and use BERT's cls token as BOS token and sep token as EOS token
+decoder = BertGenerationDecoder.from_pretrained(
+    "google-bert/bert-base-cased", add_cross_attention=True, is_decoder=True, bos_token_id=101, eos_token_id=102
+)
+bert2bert = EncoderDecoderModel(encoder=encoder, decoder=decoder)
 
-# bert2bert = EncoderDecoderModel.from_encoder_decoder_pretrained("google-bert/bert-base-cased", "google-bert/bert-base-cased")
+bert2bert = EncoderDecoderModel.from_encoder_decoder_pretrained("google-bert/bert-base-cased", "google-bert/bert-base-cased")
 
-bert2bert = BertModel.from_pretrained("bert-base-cased")
+# bert2bert = BertModel.from_pretrained("bert-base-cased")
 bert2bert.config.decoder_start_token_id = tokenizer.cls_token_id
 bert2bert.config.pad_token_id = tokenizer.pad_token_id
 
