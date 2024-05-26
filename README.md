@@ -158,6 +158,8 @@ Take note to update the flags `--container-health-route`, `--container-predict-r
 
 ```bash
 gcloud ai models upload --region asia-southeast1 --display-name 'backstreet-boys-asr' --container-image-uri asia-southeast1-docker.pkg.dev/dsta-angelhack/repository-backstreet-boys/backstreet-boys-asr:latest --container-health-route /health --container-predict-route /stt --container-ports 5001 --version-aliases default
+
+gcloud ai models upload --region asia-southeast1 --display-name 'backstreet-boys-nlp' --container-image-uri asia-southeast1-docker.pkg.dev/dsta-angelhack/repository-backstreet-boys/backstreet-boys-nlp:latest --container-health-route /health --container-predict-route /extract --container-ports 5002 --version-aliases default
 ```
 
 Shortly after successfully running the command, you should receive a Discord notification providing a link to review the status of a batch prediction job which evalulates your model accuracy and speed. If you do not, ping `@alittleclarity` on the BH24 TIL-AI Discord server in your team's private channel.

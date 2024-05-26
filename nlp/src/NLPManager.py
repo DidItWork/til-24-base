@@ -10,6 +10,8 @@ class NLPManager:
         # Load tokenizer and model
         self.tokenizer = AutoTokenizer.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_mail")
 
+        self.tokenizer.save_pretrained("/home/benluo/til-24-base/nlp/weights/")
+
         # use BERT's cls token as BOS token and sep token as EOS token
         # encoder = BertGenerationEncoder.from_pretrained("google-bert/bert-base-cased", bos_token_id=101, eos_token_id=102)
         # # add cross attention layers and use BERT's cls token as BOS token and sep token as EOS token
@@ -45,3 +47,7 @@ class NLPManager:
             target = ""
 
         return {"heading": heading.strip(), "tool": tool.strip(), "target": target.strip()}
+
+if __name__ == "__main__":
+
+    nlp_manger = NLPManager()
