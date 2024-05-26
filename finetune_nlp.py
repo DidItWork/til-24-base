@@ -32,8 +32,9 @@ def compute_metrics(pred) -> Dict[str, float]:
     - A dictionary containing the accuracy metric.
     """
     
-    preds = pred.predictions
-    labels = pred.label_ids[:,:preds.shape[1]]
+    preds = pred.predictions.detach()
+    labels = pred.label_ids.detach()
+    print(preds.shape, labels.shape)
     labels_flat = labels.flatten()
     preds_flat = preds.flatten()
     accuracy = accuracy_score(labels_flat, preds_flat)
@@ -46,17 +47,19 @@ def prepare_data(json_file:str = "", data_root:Any = None, tokenizer=None) -> Da
 
     #Returns a list of data sample dictionaries with extracted audio features and tokenized transcripts
 
-    input_text = ["Turret, prepare to deploy electromagnetic pulse. Heading zero six five, target is grey and white fighter jet. Engage when ready."]*100
-    output_text = ["electromagnetic pulse | 065 | grey and white fighter jet"]*100
+    # input_text = ["Turret, prepare to deploy electromagnetic pulse. Heading zero six five, target is grey and white fighter jet. Engage when ready."]*100
+    # output_text = ["electromagnetic pulse | 065 | grey and white fighter jet"]*100
 
-    # with open(data_root / json_file, "r") as f:
-    #     for line in f:
-    #         if line.strip() == "":
-    #             continue
-    #         instance = json.loads(line.strip())
-    #         input_text.append(instance["transcript"])
-    #         output_text.append(" | ".join([instance["tool"],instance["heading"],instance["target"]]))
-    #         break
+    input_text = []
+    output_text = []
+
+    with open(data_root / json_file, "r") as f:
+        for line in f:
+            if line.strip() == "":
+                continue
+            instance = json.loads(line.strip())
+            input_text.append(instance["transcript"])
+            output_text.append(" | ".join([instance["tool"],instance["heading"],instance["target"]]))
 
             
     input_tokenized = tokenizer(input_text, padding="max_length", truncation=True, max_length=64, return_tensors="pt")
@@ -91,15 +94,16 @@ def prepare_data(json_file:str = "", data_root:Any = None, tokenizer=None) -> Da
 #         return batch
 
 # Load tokenizer and model
-tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
+tokenizer = BertTokenizer.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_mail")
 
 # use BERT's cls token as BOS token and sep token as EOS token
-encoder = BertGenerationEncoder.from_pretrained("google-bert/bert-base-cased", bos_token_id=101, eos_token_id=102)
-# add cross attention layers and use BERT's cls token as BOS token and sep token as EOS token
-decoder = BertGenerationDecoder.from_pretrained(
-    "google-bert/bert-base-cased", add_cross_attention=True, is_decoder=True, bos_token_id=101, eos_token_id=102
-)
-bert2bert = EncoderDecoderModel(encoder=encoder, decoder=decoder)
+# encoder = BertGenerationEncoder.from_pretrained("google-bert/bert-base-cased", bos_token_id=101, eos_token_id=102)
+# # add cross attention layers and use BERT's cls token as BOS token and sep token as EOS token
+# decoder = BertGenerationDecoder.from_pretrained(
+#     "google-bert/bert-base-cased", add_cross_attention=True, is_decoder=True, bos_token_id=101, eos_token_id=102
+# )
+# bert2bert = EncoderDecoderModel(encoder=encoder, decoder=decoder)
+bert2bert = EncoderDecoderModel.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_mail")
 
 # bert2bert = EncoderDecoderModel.from_encoder_decoder_pretrained("google-bert/bert-base-cased", "google-bert/bert-base-cased")
 
@@ -124,38 +128,38 @@ bert2bert.config.pad_token_id = tokenizer.pad_token_id
 
 all_data = prepare_data(json_file="nlp.jsonl", data_root=Path(f"data/"), tokenizer=tokenizer)
 
-print(all_data)
+train_data, test_data = random_split(all_data, [0.8, 0.2])
 
-# train_data, test_data = random_split(all_data, [0.8, 0.2])
+print(all_data)
 
 # Training arguments
 training_args = Seq2SeqTrainingArguments(
     output_dir="/home/benluo/til-24-base/nlp/weights/nlp-ft",
     per_device_train_batch_size=16,
-    # gradient_accumulation_steps=1,  # increase by 2x for every 2x decrease in batch size
+    gradient_accumulation_steps=1,  # increase by 2x for every 2x decrease in batch size
     learning_rate=1e-5,
     warmup_steps=500,
-    max_steps=500,
-    dataloader_num_workers=4,
+    max_steps=5000,
+    # dataloader_num_workers=4,
     # gradient_checkpointing=True,
     # fp16=True,
     # evaluation_strategy="steps",
-    # per_device_eval_batch_size=32,
+    # per_device_eval_batch_size=1,
     # predict_with_generate=True,
     # generation_max_length=20,
     save_steps=1000,
-    # eval_steps=100,
+    # eval_steps=10,
     logging_steps=25,
-    report_to=["tensorboard"],
+    # report_to=["tensorboard"],
 )
 
 # Initialize Trainer
 trainer = Seq2SeqTrainer(
     model=bert2bert,
     args=training_args,
-    train_dataset=all_data,
+    train_dataset=train_data,
     # eval_dataset=test_data,
-    compute_metrics=compute_metrics,
+    # compute_metrics=compute_metrics,
 )
 
 # Log the start of training
