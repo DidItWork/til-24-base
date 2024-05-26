@@ -26,7 +26,7 @@ def main():
     with open(input_dir / "nlp.jsonl", "r") as f:
         instances = [json.loads(line.strip()) for line in f if line.strip() != ""]
 
-    results = run_batched(instances)
+    results = run_batched(instances[:100])
     df = pd.DataFrame(results)
     df.to_csv(results_dir / "nlp_results.csv", index=False)
     # calculate eval
@@ -45,7 +45,7 @@ def run_batched(
     for index in tqdm(range(0, len(instances), batch_size)):
         _instances = instances[index : index + batch_size]
         predictions = []
-        
+
         for instance in _instances:
             predictions.append(nlp_manager.qa(instance["transcript"]))
 

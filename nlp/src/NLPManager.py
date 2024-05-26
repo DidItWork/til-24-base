@@ -1,6 +1,6 @@
 from typing import Dict
 import torch
-from transformers import BertTokenizer, BertGenerationEncoder, BertGenerationDecoder, EncoderDecoderModel
+from transformers import AutoTokenizer, BertGenerationEncoder, BertGenerationDecoder, EncoderDecoderModel
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -8,7 +8,7 @@ class NLPManager:
     def __init__(self):
         # initialize the model here
         # Load tokenizer and model
-        self.tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
+        self.tokenizer = AutoTokenizer.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_mail")
 
         # use BERT's cls token as BOS token and sep token as EOS token
         # encoder = BertGenerationEncoder.from_pretrained("google-bert/bert-base-cased", bos_token_id=101, eos_token_id=102)
@@ -30,7 +30,7 @@ class NLPManager:
     def qa(self, context: str) -> Dict[str, str]:
         # perform NLP question-answering
         with torch.no_grad():
-            input_tokenized = self.tokenizer(context, padding="max_length", truncation=True, max_length=256, return_tensors="pt").to(device)
+            input_tokenized = self.tokenizer(context, padding="max_length", truncation=True, max_length=64, return_tensors="pt").to(device)
             outputs = self.bert2bert.generate(input_tokenized.input_ids.to(device), attention_mask=input_tokenized.attention_mask.to(device))
             output_str = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
 

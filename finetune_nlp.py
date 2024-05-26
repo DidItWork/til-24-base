@@ -6,7 +6,8 @@ import json
 # Third-party imports
 import torch
 from sklearn.metrics import accuracy_score
-from transformers import (BertTokenizer, EncoderDecoderModel, BertModel,
+from transformers import (BertTokenizer, T5ForConditionalGeneration,
+                          AutoTokenizer, EncoderDecoderModel, BertModel,
                           Seq2SeqTrainer, Seq2SeqTrainingArguments,
                           BertGenerationEncoder, BertGenerationDecoder,
                           DataCollatorWithPadding)
@@ -94,7 +95,8 @@ def prepare_data(json_file:str = "", data_root:Any = None, tokenizer=None) -> Da
 #         return batch
 
 # Load tokenizer and model
-tokenizer = BertTokenizer.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_mail")
+tokenizer = AutoTokenizer.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_mail")
+# tokenizer = AutoTokenizer.from_pretrained('google/byt5-small')
 
 # use BERT's cls token as BOS token and sep token as EOS token
 # encoder = BertGenerationEncoder.from_pretrained("google-bert/bert-base-cased", bos_token_id=101, eos_token_id=102)
@@ -103,13 +105,17 @@ tokenizer = BertTokenizer.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_
 #     "google-bert/bert-base-cased", add_cross_attention=True, is_decoder=True, bos_token_id=101, eos_token_id=102
 # )
 # bert2bert = EncoderDecoderModel(encoder=encoder, decoder=decoder)
-bert2bert = EncoderDecoderModel.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_mail")
+# model = T5ForConditionalGeneration.from_pretrained('google/byt5-small')
 
 # bert2bert = EncoderDecoderModel.from_encoder_decoder_pretrained("google-bert/bert-base-cased", "google-bert/bert-base-cased")
 
 # bert2bert = BertModel.from_pretrained("bert-base-cased")
-bert2bert.config.decoder_start_token_id = tokenizer.cls_token_id
-bert2bert.config.pad_token_id = tokenizer.pad_token_id
+model = EncoderDecoderModel.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_mail")
+model.config.decoder_start_token_id = tokenizer.cls_token_id
+model.config.pad_token_id = tokenizer.pad_token_id
+
+model.config.min_length = 0
+model.config.max_length = 64
 
 # text1 = "La economía circular se ha convertido en una tendencia prometedora y vital. Alberto Rodríguez ha estado trabajando con baterías eléctricas desde el año 2010"
 # output1 = "La economía circular@@@se ha convertido en@@@una tendencia prometedora y vital |||  Alberto Rodríguez@@ha estado trabajando con@@baterías eléctricas desde el año 2010"
@@ -139,14 +145,14 @@ training_args = Seq2SeqTrainingArguments(
     gradient_accumulation_steps=1,  # increase by 2x for every 2x decrease in batch size
     learning_rate=1e-5,
     warmup_steps=500,
-    max_steps=5000,
+    max_steps=1000,
     # dataloader_num_workers=4,
     # gradient_checkpointing=True,
     # fp16=True,
     # evaluation_strategy="steps",
     # per_device_eval_batch_size=1,
-    # predict_with_generate=True,
-    # generation_max_length=20,
+    predict_with_generate=True,
+    # generation_max_length=64,
     save_steps=1000,
     # eval_steps=10,
     logging_steps=25,
@@ -155,7 +161,7 @@ training_args = Seq2SeqTrainingArguments(
 
 # Initialize Trainer
 trainer = Seq2SeqTrainer(
-    model=bert2bert,
+    model=model,
     args=training_args,
     train_dataset=train_data,
     # eval_dataset=test_data,
@@ -172,15 +178,15 @@ trainer.train()
 logger.info("Training completed.")
 
 # Evaluate the model
-bert2bert.eval()
+model.eval()
 
-print(bert2bert.config)
+print(model.config)
 
 with torch.no_grad():
     example_input = "Turret, prepare to deploy electromagnetic pulse. Heading zero six five, target is grey and white fighter jet. Engage when ready."
     input_tokenized = tokenizer(example_input, padding="max_length", truncation=True, max_length=64, return_tensors="pt").to(device)
-    outputs = bert2bert.generate(input_tokenized.input_ids, attention_mask=input_tokenized.attention_mask, max_new_tokens=20)
-    # outputs = bert2bert(**input_tokenized)
+    outputs = model.generate(input_tokenized.input_ids, attention_mask=input_tokenized.attention_mask)
+    # outputs = model(**input_tokenized)
     output_str = tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
 
 print(f"Input String: {example_input}")
