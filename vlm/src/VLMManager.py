@@ -1,5 +1,5 @@
 from typing import List
-from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor, AutoModelForVision2Seq
+from transformers import Owlv2ForObjectDetection, AutoProcessor, AutoModelForVision2Seq
 import torch
 from PIL import Image
 import io
@@ -113,30 +113,32 @@ class VLMManager:
         
         # model_name = "Qwen/Qwen-VL-Chat-Int4"
         # model_name = "microsoft/kosmos-2-patch14-224"
-        model_path = "google/owlv2-base-patch16-ensemble"
-        processor_path = "google/owlv2-base-patch16-ensemble"
+        # model_path = "google/owlv2-base-patch16-ensemble"
+        # processor_path = "google/owlv2-base-patch16-ensemble"
         # model_path = "IDEA-Research/grounding-dino-tiny"
         # processor_path = "IDEA-Research/grounding-dino-tiny"
         # weights_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights0.pth"
 
-        self.image_width = 1520
-        self.image_height = 870
+        # self.image_width = 1520
+        # self.image_height = 870
 
-        self.target_sizes = torch.tensor([[self.image_height, self.image_width]])#
+        # self.target_sizes = torch.tensor([[self.image_height, self.image_width]])#
 
-        # model_path = "/workspace/models/model"
-        # processor_path = "/workspace/models/processor"
+        # self.processor = AutoProcessor.from_pretrained(processor_path)
+        # self.model = Owlv2ForObjectDetection.from_pretrained(model_path).to(device)
 
         #Grounding DINO
         # config_file = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/groundingdino/config/GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
-        # checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swint_ogc.pth"  # change the path of the model
-        # self.box_threshold = 0.0
-        # self.text_threshold = 1.0
-        # self.token_spans = None
-        # self.cpu_only = not torch.cuda.is_available()
+        # checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights_t_829.pth"  # change the path of the model
+        config_file = "GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
+        checkpoint_path = "model_weights.pth"  # change the path of the model
+        self.box_threshold = 0.0
+        self.text_threshold = 1.0
+        self.token_spans = None
+        self.cpu_only = not torch.cuda.is_available()
         
         # #load model
-        # self.model = load_model(config_file, checkpoint_path, cpu_only=self.cpu_only)
+        self.model = load_model(config_file, checkpoint_path, cpu_only=self.cpu_only)
 
         # self.model.save_pretrained("vlm/src/models/model")
         # self.processor.save_pretrained("vlm/src/models/processor")
@@ -147,62 +149,58 @@ class VLMManager:
         
         #Transformers owl inference pipeline
 
-        image = Image.open(io.BytesIO(image))
+        # image = Image.open(io.BytesIO(image))
 
-        inputs = self.processor(text=[caption], images=image, return_tensors="pt")
+        # inputs = self.processor(text=[[caption]], images=image, return_tensors="pt").to(device)
 
-        with torch.no_grad():
-            outputs = self.model(
-                input_ids=inputs["input_ids"].to(device),
-                attention_mask=inputs["attention_mask"].to(device),
-                pixel_values=inputs["pixel_values"].to(device),
-            )
-            print(outputs)
-            predictions = self.processor.post_process_object_detection(outputs, threshold=0.0, target_sizes=self.target_sizes)[0]
+        # with torch.no_grad():
+        #     outputs = self.model(**inputs)
+        #     print(outputs)
+        #     predictions = self.processor.post_process_object_detection(outputs, threshold=0.0, target_sizes=self.target_sizes)[0]
 
-        if len(predictions["boxes"]):
-            bbox = predictions["boxes"][torch.argmax(predictions["scores"])].to(dtype=torch.int).tolist()
-            x1, y1, x2, y2 = bbox
-        else:
-            return [0,0,0,0]
+        # if len(predictions["boxes"]):
+        #     bbox = predictions["boxes"][torch.argmax(predictions["scores"])].to(dtype=torch.int).tolist()
+        #     x1, y1, x2, y2 = bbox
+        # else:
+        #     return [0,0,0,0]
 
         # return [x1,y1,x2-x1,y2-y1]
 
         #Grounding DINO
 
-        # image_pil, image = load_image(image)
+        image_pil, image = load_image(image)
 
-        # # run model
-        # boxes_filt, pred_phrases = get_grounding_output(
-        #     self.model, image, f"{caption.lower()}", self.box_threshold, self.text_threshold, cpu_only=self.cpu_only, token_spans=None
-        # )
+        # run model
+        boxes_filt, pred_phrases = get_grounding_output(
+            self.model, image, f"{caption.lower()}", self.box_threshold, self.text_threshold, cpu_only=self.cpu_only, token_spans=None
+        )
 
-        # # visualize pred
-        # size = image_pil.size
-        # pred_dict = {
-        #     "boxes": boxes_filt,
-        #     "size": [size[1], size[0]],  # H,W
-        #     "labels": pred_phrases,
-        # }
+        # visualize pred
+        size = image_pil.size
+        pred_dict = {
+            "boxes": boxes_filt,
+            "size": [size[1], size[0]],  # H,W
+            "labels": pred_phrases,
+        }
 
-        # # print(pred_dict)
+        # print(pred_dict)
 
-        # # for i, label in enumerate(pred_dict["labels"]):
-        # #     if caption not in label:
-        # #         pred_dict["labels"][i] = 0.0
-        # #     else:
-        # #         pred_dict["labels"][i] = float(pred_dict["labels"][i].split("(")[-1].strip(")"))
+        # for i, label in enumerate(pred_dict["labels"]):
+        #     if caption not in label:
+        #         pred_dict["labels"][i] = 0.0
+        #     else:
+        #         pred_dict["labels"][i] = float(pred_dict["labels"][i].split("(")[-1].strip(")"))
 
-        # if pred_dict["boxes"].shape[0]==0:
-        #     return [0,0,0,0]
+        if pred_dict["boxes"].shape[0]==0:
+            return [0,0,0,0]
 
-        # x1, y1, w, h = (pred_dict["boxes"][argmax(pred_dict["labels"])]*torch.Tensor([size[0],size[1],size[0],size[1]])).tolist()
+        x1, y1, w, h = (pred_dict["boxes"][argmax(pred_dict["labels"])]*torch.Tensor([size[0],size[1],size[0],size[1]])).tolist()
 
-        # # print(pred_dict["labels"][argmax(pred_dict["labels"])], argmax(pred_dict["labels"]))
+        # print(pred_dict["labels"][argmax(pred_dict["labels"])], argmax(pred_dict["labels"]))
 
-        # # print(int(x1-w/2),int(y1-h/2),int(w),int(h))
+        # print(int(x1-w/2),int(y1-h/2),int(w),int(h))
 
-        # return [int(x1-w/2),int(y1-h/2),int(w),int(h)]
+        return [int(x1-w/2),int(y1-h/2),int(w),int(h)]
 
 if __name__ == "__main__":
     vlm_manager = VLMManager()
