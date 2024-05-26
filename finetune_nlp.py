@@ -101,7 +101,7 @@ decoder = BertGenerationDecoder.from_pretrained(
 )
 bert2bert = EncoderDecoderModel(encoder=encoder, decoder=decoder)
 
-bert2bert = EncoderDecoderModel.from_encoder_decoder_pretrained("google-bert/bert-base-cased", "google-bert/bert-base-cased")
+# bert2bert = EncoderDecoderModel.from_encoder_decoder_pretrained("google-bert/bert-base-cased", "google-bert/bert-base-cased")
 
 # bert2bert = BertModel.from_pretrained("bert-base-cased")
 bert2bert.config.decoder_start_token_id = tokenizer.cls_token_id
