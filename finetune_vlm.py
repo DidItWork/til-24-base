@@ -165,6 +165,14 @@ class CustomDataset(Dataset):
 
         ori_img, img = load_image(self.ann_list[idx]["image_path"], training=True)
 
+        # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+        # cv2.imshow("transformed", img)
+
+        # cv2.waitKey(0)
+
+        # return None
+
         return img, ori_img.shape, self.ann_list[idx]["boxes"], self.ann_list[idx]["captions"], preprocess_caption(caption=" . ".join(set(self.ann_list[idx]["captions"])))
 
 def collate_fn(batch):

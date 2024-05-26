@@ -111,7 +111,6 @@ class DataCollatorSpeechSeq2SeqWithPadding:
         labels_batch = self.tokenizer.pad(label_features, return_tensors="pt")
 
         #replace padding with -100 to ignore loss correctly
-        #Not sure what this does
         labels = labels_batch["input_ids"].masked_fill(labels_batch.attention_mask.ne(1), -100)
 
         #Check if begin-of-sentence is appended in previous tokenization step

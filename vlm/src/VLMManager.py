@@ -173,7 +173,7 @@ class VLMManager:
 
         # run model
         boxes_filt, pred_phrases = get_grounding_output(
-            self.model, image, f"{caption.lower()}.", self.box_threshold, self.text_threshold, cpu_only=self.cpu_only, token_spans=None
+            self.model, image, f"{caption.lower()}", self.box_threshold, self.text_threshold, cpu_only=self.cpu_only, token_spans=None
         )
 
         # visualize pred
