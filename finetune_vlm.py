@@ -165,6 +165,7 @@ class CustomDataset(Dataset):
 
         ori_img, img = load_image(self.ann_list[idx]["image_path"], training=True)
 
+
         # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
         # cv2.imshow("transformed", img)
@@ -172,6 +173,7 @@ class CustomDataset(Dataset):
         # cv2.waitKey(0)
 
         # return None
+
 
         return img, ori_img.shape, self.ann_list[idx]["boxes"], self.ann_list[idx]["captions"], preprocess_caption(caption=" . ".join(set(self.ann_list[idx]["captions"])))
 
@@ -335,4 +337,4 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
 
 
 if __name__=="__main__":
-    train(model=vlm_manager.model, ann_file=ann_file, epochs=10, save_path='/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights')
+    train(model=vlm_manager.model, ann_file=ann_file, epochs=20, save_path='/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights')

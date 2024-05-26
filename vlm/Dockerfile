@@ -12,19 +12,26 @@ ENV PYTHONUNBUFFERED 1
 # pip gives a warning if you install packages as root
 # set this flag to just ignore the warning
 ENV PIP_ROOT_USER_ACTION=ignore
+ENV CUDA_HOME=/usr/local/cuda \
+     TORCH_CUDA_ARCH_LIST="6.0 6.1 7.0 7.5 8.0 8.6+PTX" \
+     SETUPTOOLS_USE_DISTUTILS=stdlib
 
 RUN pip install -U pip
 WORKDIR /workspace
+
+#For OpenCV
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 
 # install other requirements
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-#Qwen Quantization Setup
-RUN git clone https://github.com/JustinLin610/AutoGPTQ.git & pip install -v AutoGPTQ/
-
 # copy the rest of the files into the container
 COPY src .
 
+# Grounding DINO Setup
+# RUN git clone https://github.com/IDEA-Research/GroundingDINO.git
+RUN cd GroundingDINO && pip install -e .
+
 # start model service
-CMD uvicorn api_service:app --port 5004 --host 0.0.0.0
+# CMD uvicorn api_service:app --port 5004 --host 0.0.0.0

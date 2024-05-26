@@ -28,27 +28,30 @@ def main():
 
     with open(input_dir / "vlm.jsonl", "r") as f:
         for line in f:
+            # if counter > 50:
+            #     break
             if line.strip() == "":
                 continue
             instance = json.loads(line.strip())
             with open(input_dir / "images" / instance["image"], "rb") as file:
                 image_bytes = file.read()
-                for annotation in instance["annotations"]:
-                    instances.append(
-                        {
-                            "key": counter,
-                            "caption": annotation["caption"],
-                            "b64": base64.b64encode(image_bytes).decode("ascii"),
-                        }
-                    )
-                    truths.append(
-                        {
-                            "key": counter,
-                            "caption": annotation["caption"],
-                            "bbox": annotation["bbox"],
-                        }
-                    )
-                    counter += 1
+                if instance["image"]=="image_4462.jpg":
+                    for annotation in instance["annotations"]:
+                        instances.append(
+                            {
+                                "key": counter,
+                                "caption": annotation["caption"],
+                                "b64": base64.b64encode(image_bytes).decode("ascii"),
+                            }
+                        )
+                        truths.append(
+                            {
+                                "key": counter,
+                                "caption": annotation["caption"],
+                                "bbox": annotation["bbox"],
+                            }
+                        )
+                counter += 1
 
     assert len(truths) == len(instances)
     results = run_batched(instances)
