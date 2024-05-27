@@ -114,11 +114,14 @@ tokenizer = AutoTokenizer.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_
 
 # bert2bert = BertModel.from_pretrained("bert-base-cased")
 model = EncoderDecoderModel.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_mail")
+
+
 model.config.decoder_start_token_id = tokenizer.cls_token_id
 model.config.pad_token_id = tokenizer.pad_token_id
 
 model.config.min_length = 0
 model.config.max_length = 64
+model.config.length_penalty = 0.0
 
 # text1 = "La economía circular se ha convertido en una tendencia prometedora y vital. Alberto Rodríguez ha estado trabajando con baterías eléctricas desde el año 2010"
 # output1 = "La economía circular@@@se ha convertido en@@@una tendencia prometedora y vital |||  Alberto Rodríguez@@ha estado trabajando con@@baterías eléctricas desde el año 2010"
@@ -156,7 +159,7 @@ training_args = Seq2SeqTrainingArguments(
     per_device_eval_batch_size=32,
     predict_with_generate=True,
     # generation_max_length=64,
-    save_steps=1000,
+    save_steps=500,
     eval_steps=500,
     logging_steps=25,
     # report_to=["tensorboard"],

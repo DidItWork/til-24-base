@@ -1,6 +1,6 @@
 from typing import Dict, List
 import torch
-from transformers import AutoTokenizer, BertGenerationEncoder, BertGenerationDecoder, EncoderDecoderModel
+from transformers import AutoTokenizer, EncoderDecoderModel
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -19,13 +19,13 @@ class NLPManager:
         #     "google-bert/bert-base-cased", add_cross_attention=True, is_decoder=True, bos_token_id=101, eos_token_id=102
         # )
         # self.bert2bert = EncoderDecoderModel(encoder=encoder, decoder=decoder)
-        self.bert2bert = EncoderDecoderModel.from_pretrained("/home/benluo/til-24-base/nlp/weights/nlp-ft/checkpoint-2000").to(device)
+        self.bert2bert = EncoderDecoderModel.from_pretrained("/home/benluo/til-24-base/nlp/weights/nlp-ft/checkpoint-3000").to(device)
 
         # bert2bert = EncoderDecoderModel.from_encoder_decoder_pretrained("google-bert/bert-base-cased", "google-bert/bert-base-cased")
 
         # bert2bert = BertModel.from_pretrained("bert-base-cased")
-        self.bert2bert.config.decoder_start_token_id = self.tokenizer.cls_token_id
-        self.bert2bert.config.pad_token_id = self.tokenizer.pad_token_id
+
+        # print(self.bert2bert.config)
         
         self.bert2bert.eval()
 
