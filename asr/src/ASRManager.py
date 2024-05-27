@@ -49,3 +49,6 @@ class ASRManager:
 
 if __name__ == "__main__":
     asr_manager = ASRManager()
+
+    while True:
+        pass

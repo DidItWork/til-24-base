@@ -191,7 +191,6 @@ def collate_fn(batch):
         "caption_string":caption_string,
     }
 
-
 def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoch=1):
     # Read Dataset
     ann_Dict = read_dataset(ann_file)
