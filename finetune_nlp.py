@@ -39,8 +39,6 @@ def compute_metrics(pred) -> Dict[str, float]:
     preds = pred.predictions
     labels = pred.label_ids
 
-    print(preds.shape, labels.shape)
-
     labels_flat = labels.flatten()
     preds_flat = preds.flatten()
     accuracy = accuracy_score(labels_flat, preds_flat)
@@ -153,13 +151,13 @@ training_args = Seq2SeqTrainingArguments(
     max_steps=5000,
     dataloader_num_workers=4,
     # gradient_checkpointing=True,
-    # fp16=True,
+    fp16=True,
     evaluation_strategy="steps",
     per_device_eval_batch_size=32,
     predict_with_generate=True,
     # generation_max_length=64,
     save_steps=1000,
-    eval_steps=1000,
+    eval_steps=500,
     logging_steps=25,
     # report_to=["tensorboard"],
 )
