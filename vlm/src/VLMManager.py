@@ -31,21 +31,14 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 #     return image_pil, image
 
 def load_image(image_bytes, training=True):
-    if training:
-        transform = A.Compose(
-            [
-                A.LongestMaxSize(max_size=1333),
-                A.GaussNoise(var_limit=(800.0, 900.0),p=1.0),
-                # A.Blur(blur_limit=3, p=0.2),
-                # A.HorizontalFlip(p=0.5),
-            ]
-        )
-    else:
-        transform = A.Compose(
-            [
-                A.LongestMaxSize(max_size=1333),
-            ]
-        )
+    # if training:
+    transform = A.Compose(
+        [
+            A.GaussNoise(var_limit=(800.0, 900.0),p=1.0),
+            # A.Blur(blur_limit=3, p=0.2),
+            # A.HorizontalFlip(p=0.5),
+        ]
+    )
     
     torch_transforms = T.Compose(
         [
@@ -57,7 +50,7 @@ def load_image(image_bytes, training=True):
     # image_source = Image.open(image_path).convert("RGB")
     image_source = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     # image = np.ones((1520,870,3))
-    image = np.asarray(image_source)
+    image = np.asarray(T.RandomResize([870], max_size=1520)(image_source)[0])
     image_transformed, _ = torch_transforms(transform(image=image)["image"], None)
     # image_transformed = transform(image=image)["image"]
     return image_source, image_transformed
