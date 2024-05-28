@@ -31,14 +31,15 @@ def main():
 
     with open(input_dir / "vlm.jsonl", "r") as f:
         for line in f:
-            if counter > 500:
-                break
+            # if counter > 400:
+            #     break
             if line.strip() == "":
                 continue
             instance = json.loads(line.strip())
             with open(input_dir / "images" / instance["image"], "rb") as file:
                 image_bytes = file.read()
                 if counter%5==0:
+                # if instance["image"]=="image_4440.jpg":
                     for annotation in instance["annotations"]:
                         instances.append(
                             {

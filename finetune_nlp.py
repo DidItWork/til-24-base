@@ -2,6 +2,7 @@
 import logging
 from typing import Dict, List, Any
 import json
+import os
 
 # Third-party imports
 import torch
@@ -20,8 +21,10 @@ from dataclasses import dataclass
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
+
 
 def compute_metrics(pred) -> Dict[str, float]:
     """
@@ -33,9 +36,9 @@ def compute_metrics(pred) -> Dict[str, float]:
     - A dictionary containing the accuracy metric.
     """
     
-    preds = pred.predictions.detach()
-    labels = pred.label_ids.detach()
-    print(preds.shape, labels.shape)
+    preds = pred.predictions
+    labels = pred.label_ids
+
     labels_flat = labels.flatten()
     preds_flat = preds.flatten()
     accuracy = accuracy_score(labels_flat, preds_flat)
@@ -111,11 +114,14 @@ tokenizer = AutoTokenizer.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_
 
 # bert2bert = BertModel.from_pretrained("bert-base-cased")
 model = EncoderDecoderModel.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_mail")
+
+
 model.config.decoder_start_token_id = tokenizer.cls_token_id
 model.config.pad_token_id = tokenizer.pad_token_id
 
 model.config.min_length = 0
 model.config.max_length = 64
+model.config.length_penalty = 0.0
 
 # text1 = "La economía circular se ha convertido en una tendencia prometedora y vital. Alberto Rodríguez ha estado trabajando con baterías eléctricas desde el año 2010"
 # output1 = "La economía circular@@@se ha convertido en@@@una tendencia prometedora y vital |||  Alberto Rodríguez@@ha estado trabajando con@@baterías eléctricas desde el año 2010"
@@ -145,16 +151,16 @@ training_args = Seq2SeqTrainingArguments(
     gradient_accumulation_steps=1,  # increase by 2x for every 2x decrease in batch size
     learning_rate=1e-5,
     warmup_steps=500,
-    max_steps=1000,
-    # dataloader_num_workers=4,
+    max_steps=5000,
+    dataloader_num_workers=4,
     # gradient_checkpointing=True,
-    # fp16=True,
-    # evaluation_strategy="steps",
-    # per_device_eval_batch_size=1,
+    fp16=True,
+    evaluation_strategy="steps",
+    per_device_eval_batch_size=32,
     predict_with_generate=True,
     # generation_max_length=64,
-    save_steps=1000,
-    # eval_steps=10,
+    save_steps=500,
+    eval_steps=500,
     logging_steps=25,
     # report_to=["tensorboard"],
 )
@@ -164,8 +170,8 @@ trainer = Seq2SeqTrainer(
     model=model,
     args=training_args,
     train_dataset=train_data,
-    # eval_dataset=test_data,
-    # compute_metrics=compute_metrics,
+    eval_dataset=test_data,
+    compute_metrics=compute_metrics,
 )
 
 # Log the start of training

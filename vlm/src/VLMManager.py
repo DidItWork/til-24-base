@@ -1,9 +1,11 @@
 from typing import List
-from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor, AutoModelForVision2Seq
+from transformers import AutoProcessor, GroundingDinoForObjectDetection, Owlv2ForObjectDetection, AutoProcessor, AutoModelForVision2Seq
 import torch
 from PIL import Image
 import io
 from numpy import argmax
+import numpy as np
+import albumentations as A
 
 import groundingdino.datasets.transforms as T
 from groundingdino.models import build_model
@@ -14,19 +16,45 @@ from groundingdino.util.vl_utils import create_positive_map_from_span
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-def load_image(image_bytes):
-    # load image
-    image_pil = Image.open(io.BytesIO(image_bytes)).convert("RGB")  # load image
+# def load_image(image_bytes):
+#     # load image
+#     image_pil = Image.open(io.BytesIO(image_bytes)).convert("RGB")  # load image
 
-    transform = T.Compose(
+#     transform = T.Compose(
+#         [
+#             T.RandomResize([800], max_size=1333),
+#             T.ToTensor(),
+#             T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+#         ]
+#     )
+#     image, _ = transform(image_pil, None)  # 3, h, w
+#     return image_pil, image
+
+def load_image(image_bytes, training=True):
+    # if training:
+    transform = A.Compose(
         [
-            T.RandomResize([800], max_size=1333),
+            A.GaussNoise(var_limit=(800.0, 900.0),p=1.0),
+            # A.Blur(blur_limit=3, p=0.2),
+            # A.HorizontalFlip(p=0.5),
+        ]
+    )
+    
+    torch_transforms = T.Compose(
+        [
             T.ToTensor(),
             T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         ]
     )
-    image, _ = transform(image_pil, None)  # 3, h, w
-    return image_pil, image
+
+    # image_source = Image.open(image_path).convert("RGB")
+    image_source = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    # image = np.ones((1520,870,3))
+    image = np.asarray(T.RandomResize([870], max_size=1520)(image_source)[0])
+    image_transformed, _ = torch_transforms(transform(image=image)["image"], None)
+    # image_transformed = transform(image=image)["image"]
+    return image_source, image_transformed
+
 
 
 def load_model(model_config_path, model_checkpoint_path, cpu_only=False):
@@ -124,19 +152,29 @@ class VLMManager:
 
         # self.target_sizes = torch.tensor([[self.image_height, self.image_width]])#
 
-        # model_path = "/workspace/models/model"
-        # processor_path = "/workspace/models/processor"
+        # self.processor = AutoProcessor.from_pretrained(processor_path)
+        # self.model = Owlv2ForObjectDetection.from_pretrained(model_path).to(device)
 
-        #Grounding DINO
+        #HuggingFace Grounding DINO
+
+        # self.processor = AutoProcessor.from_pretrained("IDEA-Research/grounding-dino-tiny")
+        # self.model = GroundingDinoForObjectDetection.from_pretrained("IDEA-Research/grounding-dino-tiny").to(device)
+
+        
+        # Grounding DINO
         config_file = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/groundingdino/config/GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
-        checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swint_ogc.pth"  # change the path of the model
+        checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights_download.pth"  # change the path of the model
+        # config_file = "GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
+        # checkpoint_path = "model_weights.pth"  # change the path of the model
         self.box_threshold = 0.0
         self.text_threshold = 1.0
         self.token_spans = None
         self.cpu_only = not torch.cuda.is_available()
         
-        #load model
-        self.model = load_model(config_file, checkpoint_path, cpu_only=self.cpu_only)
+        # #load model
+        self.model = load_model(config_file, checkpoint_path, cpu_only=self.cpu_only).to(device)
+
+        # self.model.eval()
 
         # self.model.save_pretrained("vlm/src/models/model")
         # self.processor.save_pretrained("vlm/src/models/processor")
@@ -144,19 +182,39 @@ class VLMManager:
 
     def identify(self, image: bytes, caption: str) -> List[int]:
         # perform object detection with a vision-language model
-        
+
+        #HuggingFace Grounding DINO
+
+        # image = Image.open(io.BytesIO(image))
+
+        # # print(caption)
+
+        # inputs = self.processor(images=image, text=caption, return_tensors="pt").to(device)
+        # outputs = self.model(**inputs)
+
+        # # convert outputs (bounding boxes and class logits) to COCO API
+        # target_sizes = torch.tensor([image.size[::-1]])
+        # results = self.processor.image_processor.post_process_object_detection(
+        #     outputs, threshold=0.1, target_sizes=target_sizes
+        # )[0]
+
+        # if results["boxes"].shape[0] == 0:
+        #     return [0,0,0,0]
+
+        # x1, y1, x2, y2 = [round(i, 1) for i in results["boxes"][0].tolist()]
+        # # for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
+        # #     box = [round(i, 1) for i in box.tolist()]
+        # #     print(f"Detected {label.item()} with confidence " f"{round(score.item(), 2)} at location {box}")
+        # return [x1, y1, x2-x1, y2-y1]
         #Transformers owl inference pipeline
 
         # image = Image.open(io.BytesIO(image))
 
-        # inputs = self.processor(text=[caption], images=image, return_tensors="pt")
+        # inputs = self.processor(text=[[caption]], images=image, return_tensors="pt").to(device)
 
         # with torch.no_grad():
-        #     outputs = self.model(
-        #         input_ids=inputs["input_ids"].to(device),
-        #         attention_mask=inputs["attention_mask"].to(device),
-        #         pixel_values=inputs["pixel_values"].to(device),
-        #     )
+        #     outputs = self.model(**inputs)
+        #     print(outputs)
         #     predictions = self.processor.post_process_object_detection(outputs, threshold=0.0, target_sizes=self.target_sizes)[0]
 
         # if len(predictions["boxes"]):

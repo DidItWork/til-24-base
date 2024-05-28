@@ -12,12 +12,12 @@ protobuf==3.20
 accelerate
 uvicorn[standard]
 
-#Qwen
-transformers==4.32.0
-tiktoken
-einops
-transformers_stream_generator==0.0.4
-pillow
-tensorboard
-optimum
-gekko
+# #Qwen
+# transformers
+# tiktoken
+# einops
+# transformers_stream_generator==0.0.4
+# pillow
+# tensorboard
+# optimum
+# gekko
