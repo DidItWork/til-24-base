@@ -8,7 +8,7 @@ class NLPManager:
     def __init__(self):
         # initialize the model here
         # Load tokenizer and model
-        self.tokenizer = AutoTokenizer.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_mail")
+        self.tokenizer = AutoTokenizer.from_pretrained("/workspace/models/tokenizer")
 
         # self.tokenizer.save_pretrained("/home/benluo/til-24-base/nlp/weights/")
 
@@ -19,7 +19,7 @@ class NLPManager:
         #     "google-bert/bert-base-cased", add_cross_attention=True, is_decoder=True, bos_token_id=101, eos_token_id=102
         # )
         # self.bert2bert = EncoderDecoderModel(encoder=encoder, decoder=decoder)
-        self.bert2bert = EncoderDecoderModel.from_pretrained("/home/benluo/til-24-base/nlp/weights/nlp-ft/checkpoint-3000").to(device)
+        self.bert2bert = EncoderDecoderModel.from_pretrained("/workspace/models/nlp-ft").to(device)
 
         # bert2bert = EncoderDecoderModel.from_encoder_decoder_pretrained("google-bert/bert-base-cased", "google-bert/bert-base-cased")
 
