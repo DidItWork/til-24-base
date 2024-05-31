@@ -6,10 +6,12 @@ import io
 from numpy import argmax
 import numpy as np
 import albumentations as A
+import supervision as sv
 
 import groundingdino.datasets.transforms as T
 from groundingdino.models import build_model
 from groundingdino.util import box_ops
+from groundingdino.util.inference import predict, annotate
 from groundingdino.util.slconfig import SLConfig
 from groundingdino.util.utils import clean_state_dict, get_phrases_from_posmap
 from groundingdino.util.vl_utils import create_positive_map_from_span
@@ -34,7 +36,8 @@ def load_image(image_bytes, training=True):
     # if training:
     transform = A.Compose(
         [
-            A.GaussNoise(var_limit=(800.0, 900.0),p=1.0),
+            # A.GaussNoise(var_limit=(800.0, 900.0),p=1.0),
+            # A.GaussNoise(var_limit=(0.0, 3000.0),p=1.0),
             # A.Blur(blur_limit=3, p=0.2),
             # A.HorizontalFlip(p=0.5),
         ]
@@ -61,6 +64,7 @@ def load_model(model_config_path, model_checkpoint_path, cpu_only=False):
     args = SLConfig.fromfile(model_config_path)
     args.device = "cuda" if not cpu_only else "cpu"
     model = build_model(args)
+    print(model)
     checkpoint = torch.load(model_checkpoint_path, map_location="cpu")
     if "model" in checkpoint:
         load_res = model.load_state_dict(clean_state_dict(checkpoint["model"]), strict=False)
@@ -162,17 +166,37 @@ class VLMManager:
 
         
         # Grounding DINO
-        config_file = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/groundingdino/config/GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
-        checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights_download.pth"  # change the path of the model
-        # config_file = "GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
-        # checkpoint_path = "model_weights.pth"  # change the path of the model
-        self.box_threshold = 0.0
-        self.text_threshold = 1.0
+        # config_file = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/groundingdino/config/GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
+        # checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swint_ogc.pth"  # change the path of the model
+        config_file = "GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
+        checkpoint_path = "model_weights.pth"  # change the path of the model
+        self.box_threshold = 0.35
+        self.text_threshold = 0.25
         self.token_spans = None
         self.cpu_only = not torch.cuda.is_available()
         
         # #load model
         self.model = load_model(config_file, checkpoint_path, cpu_only=self.cpu_only).to(device)
+
+        #Do not train language backbone
+        for param in self.model.bert.parameters():
+            param.requires_grad = False
+
+        # for param in self.model.backbone.parameters():
+        #     param.requires_grad = False
+        
+        # for param in self.model.bbox_embed.parameters():
+        #     param.requires_grad = True
+        
+        # for param in self.model.class_embed.parameters():
+        #     param.requires_grad = True
+
+        # for param in self.model.backbone.parameters():
+        #     param.requires_grad = True
+        
+        # print(self.model)
+        
+        # print([param.requires_grad for param in self.model.backbone.parameters()])
 
         # self.model.eval()
 
@@ -230,17 +254,21 @@ class VLMManager:
         image_pil, image = load_image(image)
 
         # run model
-        boxes_filt, pred_phrases = get_grounding_output(
-            self.model, image, f"{caption.lower()}", self.box_threshold, self.text_threshold, cpu_only=self.cpu_only, token_spans=None
+        boxes_filt, logits, pred_phrases = predict(
+            self.model, image, f"{caption.lower()} .", self.box_threshold, self.text_threshold, "cuda", True
         )
+
+        # print(caption, logits, pred_phrases)
+
+        phrase_lengths = torch.tensor([len(pred_phrase) for pred_phrase in pred_phrases])
 
         # visualize pred
         size = image_pil.size
-        pred_dict = {
-            "boxes": boxes_filt,
-            "size": [size[1], size[0]],  # H,W
-            "labels": pred_phrases,
-        }
+        # pred_dict = {
+        #     "boxes": boxes_filt,
+        #     "size": [size[1], size[0]],  # H,W
+        #     "labels": pred_phrases,
+        # }
 
         # print(pred_dict)
 
@@ -250,12 +278,17 @@ class VLMManager:
         #     else:
         #         pred_dict["labels"][i] = float(pred_dict["labels"][i].split("(")[-1].strip(")"))
 
-        if pred_dict["boxes"].shape[0]==0:
+        if boxes_filt.shape[0]==0:
             return [0,0,0,0]
 
-        x1, y1, w, h = (pred_dict["boxes"][argmax(pred_dict["labels"])]*torch.Tensor([size[0],size[1],size[0],size[1]])).tolist()
+        x1, y1, w, h = (boxes_filt[argmax(logits*phrase_lengths)]*torch.Tensor([size[0],size[1],size[0],size[1]])).tolist()
+
 
         # print(pred_dict["labels"][argmax(pred_dict["labels"])], argmax(pred_dict["labels"]))
+
+        # annotated_frame = annotate(image_source=np.asarray(image_pil), boxes=boxes_filt, logits=logits, phrases=pred_phrases)
+
+        # sv.plot_image(annotated_frame, (16, 16))
 
         # print(int(x1-w/2),int(y1-h/2),int(w),int(h))
 

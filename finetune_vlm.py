@@ -251,7 +251,7 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
 
     # Add Learning Rate Scheduler
     # lr_scheduler = optim.lr_scheduler.StepLR(optimizer,
-    #                                          step_size=1,
+    #                                          step_size=2,
     #                                          gamma=0.5)
     
     # Ensure the model is in training mode
@@ -336,4 +336,4 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
 
 
 if __name__=="__main__":
-    train(model=vlm_manager.model, ann_file=ann_file, epochs=20, save_path='/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights2_')
+    train(model=vlm_manager.model, ann_file=ann_file, epochs=20, save_path='/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights3')

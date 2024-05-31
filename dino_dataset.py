@@ -35,7 +35,7 @@ def convert(input_dir:str, output_dir:str)->None:
                     x1, y1, w, h = annotation["bbox"]
                     train_instances.append(
                         {
-                            "label_name": annotation["caption"],
+                            "label_name": annotation["caption"].split(" ")[-1],
                             "bbox_x": x1,
                             "bbox_y": y1,
                             "bbox_width": w,
@@ -50,7 +50,7 @@ def convert(input_dir:str, output_dir:str)->None:
                     x1, y1, w, h = annotation["bbox"]
                     test_instances.append(
                         {
-                            "label_name": annotation["caption"],
+                            "label_name": annotation["caption"].split(" ")[-1],
                             "bbox_x": x1,
                             "bbox_y": y1,
                             "bbox_width": w,
@@ -71,12 +71,12 @@ def convert(input_dir:str, output_dir:str)->None:
 
     print(f"Writing to {output_dir}...")
     #Write to csv
-    with open(output_dir+"/train_annotations.csv", "w") as csvfile:
+    with open(output_dir+"/train_class_annotations.csv", "w") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=list(train_instances[0].keys()))
         writer.writeheader()
         writer.writerows(train_instances)
 
-    with open(output_dir+"/test_annotations.csv", "w") as csvfile:
+    with open(output_dir+"/test_class_annotations.csv", "w") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=list(test_instances[0].keys()))
         writer.writeheader()
         writer.writerows(test_instances)

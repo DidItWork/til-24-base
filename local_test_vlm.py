@@ -31,8 +31,8 @@ def main():
 
     with open(input_dir / "vlm.jsonl", "r") as f:
         for line in f:
-            # if counter > 400:
-            #     break
+            if counter > 400:
+                break
             if line.strip() == "":
                 continue
             instance = json.loads(line.strip())
@@ -43,6 +43,7 @@ def main():
                     for annotation in instance["annotations"]:
                         instances.append(
                             {
+                                "path": instance["image"],
                                 "key": counter,
                                 "caption": annotation["caption"],
                                 "b64": base64.b64encode(image_bytes).decode("ascii"),
@@ -81,6 +82,7 @@ def run_batched(
         _instances = instances[index : index + batch_size]
         
         for instance in _instances:
+            # print(instance["path"])
             image_bytes = base64.b64decode(instance["b64"])
             predictions.append(vlm_manager.identify(image_bytes, instance["caption"]))
 
