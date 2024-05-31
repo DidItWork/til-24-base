@@ -147,6 +147,11 @@ class CustomDataset(Dataset):
                 x2=x1+int(row['bbox_width'])
                 y2=y1+int(row['bbox_height'])
                 label=row['label_name']
+                # self.ann_list.append({
+                #     "image_path":img_n,
+                #     "boxes":[[x1,y1,x2,y2]],
+                #     "captions":[label]
+                # })
                 ann_Dict[img_n]['boxes'].append([x1,y1,x2,y2])
                 ann_Dict[img_n]['captions'].append(label)
 
@@ -219,9 +224,12 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
     test_instances = []
     truths = []
     counter = 0
+    test_score = 0
 
     with open("/home/benluo/til-24-base/data/test_vlm.jsonl", "r") as f:
         for line in f:
+            if counter > 100:
+                break
             if line.strip() == "":
                 continue
             instance = json.loads(line.strip())
@@ -303,30 +311,32 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
     #         total_loss += loss.item()  # Accumulate the loss
     #         print(f"Processed image {idx+1}/{len(ann_Dict)}, Loss: {loss.item()}")
 
+            if idx%500==0:
+                #test
+                vlm_manager.model.eval()
+                
+                with torch.inference_mode():
+                    results = run_batched(test_instances)
+                    # calculate eval
+                    test_score = vlm_eval(
+                        [truth["bbox"] for truth in truths],
+                        [result["bbox"] for result in results],
+                    )
+
+                vlm_manager.model.train()
+                
+                print(f"IoU@0.5: {test_score}, Best IoU@0.5: {best_score}")
+
+                if test_score > best_score:
+                    best_score = test_score
+                    torch.save(vlm_manager.model.state_dict(), f"{save_path}_best.pth")
+
         # Print the average loss for the epoch
 
         if lr_scheduler is not None:
             lr_scheduler.step()
 
-        #test
-        vlm_manager.model.eval()
-        test_score = 0
-        
-        with torch.inference_mode():
-            results = run_batched(test_instances)
-            # calculate eval
-            test_score = vlm_eval(
-                [truth["bbox"] for truth in truths],
-                [result["bbox"] for result in results],
-            )
-
-        vlm_manager.model.train()
-        
         print(f"Epoch {epoch+1}/{epochs}, Average Loss: {total_loss / len(ann_Dict)}, IoU@0.5: {test_score}, Best IoU@0.5: {best_score}")
-
-        if test_score > best_score:
-            best_score = test_score
-            torch.save(vlm_manager.model.state_dict(), f"{save_path}_best.pth")
 
         # if (epoch%save_epoch)==0:
         #     # Save the model's weights after each epoch
@@ -336,4 +346,4 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
 
 
 if __name__=="__main__":
-    train(model=vlm_manager.model, ann_file=ann_file, epochs=20, save_path='/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights3')
+    train(model=vlm_manager.model, ann_file=ann_file, epochs=1, save_path='/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights4')

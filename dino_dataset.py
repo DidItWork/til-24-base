@@ -2,6 +2,7 @@ import json
 import csv
 from tqdm import tqdm
 from pathlib import Path
+from numpy import random
 
 def convert(input_dir:str, output_dir:str)->None:
 
@@ -35,7 +36,7 @@ def convert(input_dir:str, output_dir:str)->None:
                     x1, y1, w, h = annotation["bbox"]
                     train_instances.append(
                         {
-                            "label_name": annotation["caption"].split(" ")[-1],
+                            "label_name": annotation["caption"],
                             "bbox_x": x1,
                             "bbox_y": y1,
                             "bbox_width": w,
@@ -46,11 +47,23 @@ def convert(input_dir:str, output_dir:str)->None:
                         }
                     )
             else:
-                for annotation in instance["annotations"]:
-                    x1, y1, w, h = annotation["bbox"]
+                # for annotation in instance["annotations"]:
+                #     x1, y1, w, h = annotation["bbox"]
+                #     annotation["caption"] = annotation["caption"].lower()
+                #     if random.rand()>0.5:
+                #         annotation["caption"] = annotation["caption"].replace("black", "dark")
+                #     if random.rand()>0.5:
+                #         annotation["caption"] = annotation["caption"].replace("cargo", "freight")
+                #     if random.rand()>0.5:
+                #         annotation["caption"] = annotation["caption"].replace("commercial", "passenger")
+                #     if random.rand()>0.5:
+                #         annotation["caption"] = annotation["caption"].replace("missile","rocket")
+
+                # test_instances.append(instance)
+
                     test_instances.append(
                         {
-                            "label_name": annotation["caption"].split(" ")[-1],
+                            "label_name": annotation["caption"],
                             "bbox_x": x1,
                             "bbox_y": y1,
                             "bbox_width": w,
@@ -71,12 +84,12 @@ def convert(input_dir:str, output_dir:str)->None:
 
     print(f"Writing to {output_dir}...")
     #Write to csv
-    with open(output_dir+"/train_class_annotations.csv", "w") as csvfile:
+    with open(output_dir+"/train_annotations.csv", "w") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=list(train_instances[0].keys()))
         writer.writeheader()
         writer.writerows(train_instances)
 
-    with open(output_dir+"/test_class_annotations.csv", "w") as csvfile:
+    with open(output_dir+"/test_annotations.csv", "w") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=list(test_instances[0].keys()))
         writer.writeheader()
         writer.writerows(test_instances)

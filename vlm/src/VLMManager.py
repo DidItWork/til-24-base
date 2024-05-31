@@ -166,10 +166,10 @@ class VLMManager:
 
         
         # Grounding DINO
-        # config_file = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/groundingdino/config/GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
-        # checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swint_ogc.pth"  # change the path of the model
-        config_file = "GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
-        checkpoint_path = "model_weights.pth"  # change the path of the model
+        config_file = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/groundingdino/config/GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
+        checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swint_ogc.pth"  # change the path of the model
+        # config_file = "GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
+        # checkpoint_path = "model_weights.pth"  # change the path of the model
         self.box_threshold = 0.35
         self.text_threshold = 0.25
         self.token_spans = None
@@ -179,8 +179,8 @@ class VLMManager:
         self.model = load_model(config_file, checkpoint_path, cpu_only=self.cpu_only).to(device)
 
         #Do not train language backbone
-        for param in self.model.bert.parameters():
-            param.requires_grad = False
+        # for param in self.model.parameters():
+        #     param.requires_grad = False
 
         # for param in self.model.backbone.parameters():
         #     param.requires_grad = False
@@ -191,8 +191,8 @@ class VLMManager:
         # for param in self.model.class_embed.parameters():
         #     param.requires_grad = True
 
-        # for param in self.model.backbone.parameters():
-        #     param.requires_grad = True
+        # for param in self.model.bert.parameters():
+        #     param.requires_grad = False
         
         # print(self.model)
         
