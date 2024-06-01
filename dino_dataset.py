@@ -18,7 +18,7 @@ def convert(input_dir:str, output_dir:str)->None:
     count = 0
 
     #Ratio of train to test data instances
-    train_test_ratio = 14
+    train_test_ratio = 3
 
     with open(input_dir / "vlm.jsonl", "r") as f:
         for line in tqdm(f):
@@ -49,7 +49,7 @@ def convert(input_dir:str, output_dir:str)->None:
             else:
                 # for annotation in instance["annotations"]:
                 #     x1, y1, w, h = annotation["bbox"]
-                #     annotation["caption"] = annotation["caption"].lower()
+                    # annotation["caption"] = annotation["caption"].lower()
                 #     if random.rand()>0.5:
                 #         annotation["caption"] = annotation["caption"].replace("black", "dark")
                 #     if random.rand()>0.5:
@@ -59,28 +59,21 @@ def convert(input_dir:str, output_dir:str)->None:
                 #     if random.rand()>0.5:
                 #         annotation["caption"] = annotation["caption"].replace("missile","rocket")
 
-                # test_instances.append(instance)
+                test_instances.append(instance)
 
-                    test_instances.append(
-                        {
-                            "label_name": annotation["caption"],
-                            "bbox_x": x1,
-                            "bbox_y": y1,
-                            "bbox_width": w,
-                            "bbox_height": h,
-                            "image_name": instance["image"],
-                            "image_width": 1520,
-                            "image_height": 870,
-                        }
-                    )
+                    # test_instances.append(
+                    #     {
+                    #         "label_name": annotation["caption"],
+                    #         "bbox_x": x1,
+                    #         "bbox_y": y1,
+                    #         "bbox_width": w,
+                    #         "bbox_height": h,
+                    #         "image_name": instance["image"],
+                    #         "image_width": 1520,
+                    #         "image_height": 870,
+                    #     }
+                    # )
             count += 1
-
-    # with open(output_dir+"/test_vlm.jsonl", "w") as testfile:
-    #     for line in test_instances:
-    #         json_str = json.dumps(line)
-    #         testfile.write(json_str+"\n")
-    
-    # return None
 
     print(f"Writing to {output_dir}...")
     #Write to csv
@@ -88,11 +81,18 @@ def convert(input_dir:str, output_dir:str)->None:
         writer = csv.DictWriter(csvfile, fieldnames=list(train_instances[0].keys()))
         writer.writeheader()
         writer.writerows(train_instances)
+    
+    with open(output_dir+"/test_vlm.jsonl", "w") as testfile:
+        for line in test_instances:
+            json_str = json.dumps(line)
+            testfile.write(json_str+"\n")
+    
+    # return None
 
-    with open(output_dir+"/test_annotations.csv", "w") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=list(test_instances[0].keys()))
-        writer.writeheader()
-        writer.writerows(test_instances)
+    # with open(output_dir+"/test_annotations.csv", "w") as csvfile:
+    #     writer = csv.DictWriter(csvfile, fieldnames=list(test_instances[0].keys()))
+    #     writer.writeheader()
+    #     writer.writerows(test_instances)
 
 if __name__=="__main__":
 

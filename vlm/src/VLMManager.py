@@ -5,8 +5,8 @@ from PIL import Image
 import io
 from numpy import argmax
 import numpy as np
-import albumentations as A
-import supervision as sv
+# import albumentations as A
+# import supervision as sv
 
 import groundingdino.datasets.transforms as T
 from groundingdino.models import build_model
@@ -34,14 +34,14 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 def load_image(image_bytes, training=True):
     # if training:
-    transform = A.Compose(
-        [
-            # A.GaussNoise(var_limit=(800.0, 900.0),p=1.0),
-            # A.GaussNoise(var_limit=(0.0, 3000.0),p=1.0),
-            # A.Blur(blur_limit=3, p=0.2),
-            # A.HorizontalFlip(p=0.5),
-        ]
-    )
+    # transform = A.Compose(
+    #     [
+    #         # A.GaussNoise(var_limit=(800.0, 900.0),p=1.0),
+    #         # A.GaussNoise(var_limit=(0.0, 3000.0),p=1.0),
+    #         # A.Blur(blur_limit=3, p=0.2),
+    #         # A.HorizontalFlip(p=0.5),
+    #     ]
+    # )
     
     torch_transforms = T.Compose(
         [
@@ -54,7 +54,7 @@ def load_image(image_bytes, training=True):
     image_source = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     # image = np.ones((1520,870,3))
     image = np.asarray(T.RandomResize([870], max_size=1520)(image_source)[0])
-    image_transformed, _ = torch_transforms(transform(image=image)["image"], None)
+    image_transformed, _ = torch_transforms(image, None)
     # image_transformed = transform(image=image)["image"]
     return image_source, image_transformed
 
@@ -166,8 +166,8 @@ class VLMManager:
 
         
         # Grounding DINO
-        config_file = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/groundingdino/config/GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
-        checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swint_ogc.pth"  # change the path of the model
+        config_file = "/home/benluo/til-24-base/vlm/src/GroundingDINO_SwinB_cfg.py"  # change the path of the model config file
+        checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swinb_cogcoor.pth"  # change the path of the model
         # config_file = "GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
         # checkpoint_path = "model_weights.pth"  # change the path of the model
         self.box_threshold = 0.35
