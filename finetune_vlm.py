@@ -205,7 +205,7 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
 
     train_dataloader = DataLoader(dataset=train_data,
                                    batch_size=4,
-                                   num_workers=4,
+                                   num_workers=0,
                                    shuffle=True,
                                    collate_fn=collate_fn)
     
@@ -228,8 +228,8 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
 
     with open("/home/benluo/til-24-base/data/test_vlm.jsonl", "r") as f:
         for line in f:
-            # if counter > 500:
-            #     break
+            if counter > 100:
+                break
             if line.strip() == "":
                 continue
             instance = json.loads(line.strip())
@@ -253,7 +253,7 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
                 counter += 1
     
     # Add optimizer
-    optimizer = optim.Adam(vlm_manager.model.parameters(), lr=1e-5, weight_decay=1e-2)
+    optimizer = optim.Adam(vlm_manager.model.parameters(), lr=1e-5, weight_decay=1e-4)
 
     lr_scheduler = None
 
@@ -346,4 +346,4 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
 
 
 if __name__=="__main__":
-    train(model=vlm_manager.model, ann_file=ann_file, epochs=20, save_path='/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights5')
+    train(model=vlm_manager.model, ann_file=ann_file, epochs=20, save_path='/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights_b3')

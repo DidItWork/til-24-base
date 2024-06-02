@@ -6,4 +6,6 @@ docker tag backstreet-boys-vlm asia-southeast1-docker.pkg.dev/dsta-angelhack/rep
 
 docker push asia-southeast1-docker.pkg.dev/dsta-angelhack/repository-backstreet-boys/backstreet-boys-vlm:latest
 
+echo "Docker upload done!"
+
 gcloud ai models upload --region asia-southeast1 --display-name 'backstreet-boys-vlm' --container-image-uri asia-southeast1-docker.pkg.dev/dsta-angelhack/repository-backstreet-boys/backstreet-boys-vlm:latest --container-health-route /health --container-predict-route /identify --container-ports 5004 --version-aliases default
