@@ -166,8 +166,8 @@ class VLMManager:
 
         
         # Grounding DINO
-        config_file = "/home/benluo/til-24-base/vlm/src/GroundingDINO_SwinB_cfg.py"  # change the path of the model config file
-        checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swinb_cogcoor.pth"  # change the path of the model
+        config_file = "/home/benluo/til-24-base/vlm/src/GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
+        checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swint_ogc.pth"  # change the path of the model
         # config_file = "GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
         # checkpoint_path = "model_weights.pth"  # change the path of the model
         self.box_threshold = 0.35
