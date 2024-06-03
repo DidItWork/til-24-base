@@ -29,32 +29,33 @@ def main():
     truths = []
     counter = 0
 
-    with open(input_dir / "vlm.jsonl", "r") as f:
+    with open(input_dir / "test_vlm.jsonl", "r") as f:
         for line in f:
-            # if counter > 400:
-            #     break
+            if counter > 400:
+                break
             if line.strip() == "":
                 continue
             instance = json.loads(line.strip())
             with open(input_dir / "images" / instance["image"], "rb") as file:
                 image_bytes = file.read()
-                if counter%5==0:
+                # if counter%5==0:
                 # if instance["image"]=="image_4440.jpg":
-                    for annotation in instance["annotations"]:
-                        instances.append(
-                            {
-                                "key": counter,
-                                "caption": annotation["caption"],
-                                "b64": base64.b64encode(image_bytes).decode("ascii"),
-                            }
-                        )
-                        truths.append(
-                            {
-                                "key": counter,
-                                "caption": annotation["caption"],
-                                "bbox": annotation["bbox"],
-                            }
-                        )
+                for annotation in instance["annotations"]:
+                    instances.append(
+                        {
+                            "path": instance["image"],
+                            "key": counter,
+                            "caption": annotation["caption"],
+                            "b64": base64.b64encode(image_bytes).decode("ascii"),
+                        }
+                    )
+                    truths.append(
+                        {
+                            "key": counter,
+                            "caption": annotation["caption"],
+                            "bbox": annotation["bbox"],
+                        }
+                    )
                 counter += 1
 
     assert len(truths) == len(instances)
@@ -81,6 +82,7 @@ def run_batched(
         _instances = instances[index : index + batch_size]
         
         for instance in _instances:
+            # print(instance["path"])
             image_bytes = base64.b64decode(instance["b64"])
             predictions.append(vlm_manager.identify(image_bytes, instance["caption"]))
 

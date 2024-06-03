@@ -17,6 +17,8 @@ from typing import List, Dict, Any, Union
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
 # Model
 # model = load_model("/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/groundingdino/config/GroundingDINO_SwinT_OGC.py", "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swint_ogc.pth")
 
@@ -147,6 +149,11 @@ class CustomDataset(Dataset):
                 x2=x1+int(row['bbox_width'])
                 y2=y1+int(row['bbox_height'])
                 label=row['label_name']
+                # self.ann_list.append({
+                #     "image_path":img_n,
+                #     "boxes":[[x1,y1,x2,y2]],
+                #     "captions":[label]
+                # })
                 ann_Dict[img_n]['boxes'].append([x1,y1,x2,y2])
                 ann_Dict[img_n]['captions'].append(label)
 
@@ -175,7 +182,7 @@ class CustomDataset(Dataset):
         # return None
 
 
-        return img, ori_img.shape, self.ann_list[idx]["boxes"], self.ann_list[idx]["captions"], preprocess_caption(caption=" . ".join(set(self.ann_list[idx]["captions"])))
+        return img, ori_img.shape, self.ann_list[idx]["boxes"], self.ann_list[idx]["captions"], preprocess_caption(caption=" . ".join(self.ann_list[idx]["captions"]))
 
 def collate_fn(batch):
 
@@ -191,7 +198,6 @@ def collate_fn(batch):
         "caption_string":caption_string,
     }
 
-
 def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoch=1):
     # Read Dataset
     ann_Dict = read_dataset(ann_file)
@@ -201,7 +207,7 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
 
     train_dataloader = DataLoader(dataset=train_data,
                                    batch_size=4,
-                                   num_workers=4,
+                                   num_workers=1,
                                    shuffle=True,
                                    collate_fn=collate_fn)
     
@@ -220,9 +226,12 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
     test_instances = []
     truths = []
     counter = 0
+    test_score = 0
 
     with open("/home/benluo/til-24-base/data/test_vlm.jsonl", "r") as f:
         for line in f:
+            if counter > 100:
+                break
             if line.strip() == "":
                 continue
             instance = json.loads(line.strip())
@@ -246,13 +255,22 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
                 counter += 1
     
     # Add optimizer
+    # optimizer = optim.AdamW([
+    #     {"params": vlm_manager.model.transformer.parameters()},
+    #     {"params": vlm_manager.model.feat_map.parameters()},
+    #     {"params": vlm_manager.model.input_proj.parameters()},
+    #     {"params": vlm_manager.model.backbone.parameters()},
+    #     # {"params": vlm_manager.model.bbox_embed.parameters()},
+    #     {"params": vlm_manager.model.class_embed.parameters()},
+    #     {"params": vlm_manager.model.bert.parameters(), "lr": 1e-5}], lr=1e-5, weight_decay=1e-4)
+
     optimizer = optim.Adam(vlm_manager.model.parameters(), lr=1e-5)
 
     lr_scheduler = None
 
     # Add Learning Rate Scheduler
     # lr_scheduler = optim.lr_scheduler.StepLR(optimizer,
-    #                                          step_size=1,
+    #                                          step_size=2,
     #                                          gamma=0.5)
     
     # Ensure the model is in training mode
@@ -265,16 +283,33 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
         total_loss = 0
         for idx, batch in enumerate(tqdm(train_dataloader)):
 
-            optimizer.zero_grad()
-
-            loss = train_image_batch(
-                model=vlm_manager.model,
-                data_dict=batch
-            )
+            
+            with torch.autocast(device_type=device, dtype=torch.float16):
+                loss = train_image_batch(
+                    model=vlm_manager.model,
+                    data_dict=batch
+                )
 
             loss.backward()
             optimizer.step()
-            total_loss += loss.item()
+            optimizer.zero_grad()
+            total_loss += loss.detach().item()
+        
+            # if (idx+1)%200==0:
+            #     #test
+            #     vlm_manager.model.eval()
+                
+            #     with torch.inference_mode():
+            #         results = run_batched(test_instances)
+            #         # calculate eval
+            #         test_score = vlm_eval(
+            #             [truth["bbox"] for truth in truths],
+            #             [result["bbox"] for result in results],
+            #         )
+
+            #     vlm_manager.model.train()
+                
+            #     print(f"IoU@0.5: {test_score}, Best IoU@0.5: {best_score}")
 
             # print(f"Iter {idx}/{len(custom_dataloader)}, Loss: {loss.item()}")
 
@@ -304,14 +339,13 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
     #         total_loss += loss.item()  # Accumulate the loss
     #         print(f"Processed image {idx+1}/{len(ann_Dict)}, Loss: {loss.item()}")
 
+
         # Print the average loss for the epoch
 
         if lr_scheduler is not None:
             lr_scheduler.step()
 
-        #test
         vlm_manager.model.eval()
-        test_score = 0
         
         with torch.inference_mode():
             results = run_batched(test_instances)
@@ -323,18 +357,20 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
 
         vlm_manager.model.train()
         
-        print(f"Epoch {epoch+1}/{epochs}, Average Loss: {total_loss / len(ann_Dict)}, IoU@0.5: {test_score}, Best IoU@0.5: {best_score}")
+        print(f"IoU@0.5: {test_score}, Best IoU@0.5: {best_score}")
 
         if test_score > best_score:
             best_score = test_score
             torch.save(vlm_manager.model.state_dict(), f"{save_path}_best.pth")
 
-        if (epoch%save_epoch)==0:
-            # Save the model's weights after each epoch
-            torch.save(vlm_manager.model.state_dict(), f"{save_path}{epoch}.pth")
-            print(f"Model weights saved to {save_path}{epoch}.pth")
+        print(f"Epoch {epoch+1}/{epochs}, Average Loss: {total_loss / len(ann_Dict)}, IoU@0.5: {test_score}, Best IoU@0.5: {best_score}")
+
+        # if (epoch%save_epoch)==0:
+        #     # Save the model's weights after each epoch
+        #     torch.save(vlm_manager.model.state_dict(), f"{save_path}{epoch}.pth")
+        #     print(f"Model weights saved to {save_path}{epoch}.pth")
 
 
 
 if __name__=="__main__":
-    train(model=vlm_manager.model, ann_file=ann_file, epochs=20, save_path='/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights')
+    train(model=vlm_manager.model, ann_file=ann_file, epochs=20, save_path='/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights_pls_work_b')

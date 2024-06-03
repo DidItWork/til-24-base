@@ -29,10 +29,10 @@ async def extract(instance: Request):
     # get transcription, and pass to NLP model
     request_dict = await instance.json()
 
-    predictions = []
-    for instance in request_dict["instances"]:
-        # each is a dict with one key "transcript" and the transcription as a string
-        answers = nlp_manager.qa(instance["transcript"])
-        predictions.append(answers)
+    # predictions = []
+    # for instance in request_dict["instances"]:
+    # each is a dict with one key "transcript" and the transcription as a string
+    predictions = nlp_manager.qa([instance["transcript"] for instance in request_dict["instances"]])
+    # predictions.append(answers)
 
     return {"predictions": predictions}
