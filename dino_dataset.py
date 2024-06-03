@@ -32,20 +32,21 @@ def convert(input_dir:str, output_dir:str)->None:
 
             instance = json.loads(line.strip())
             if count%(train_test_ratio+1):
-                for annotation in instance["annotations"]:
-                    x1, y1, w, h = annotation["bbox"]
-                    train_instances.append(
-                        {
-                            "label_name": annotation["caption"],
-                            "bbox_x": x1,
-                            "bbox_y": y1,
-                            "bbox_width": w,
-                            "bbox_height": h,
-                            "image_name": instance["image"],
-                            "image_width": 1520,
-                            "image_height": 870,
-                        }
-                    )
+                # for annotation in instance["annotations"]:
+                #     x1, y1, w, h = annotation["bbox"]
+                #     train_instances.append(
+                #         {
+                #             "label_name": annotation["caption"],
+                #             "bbox_x": x1,
+                #             "bbox_y": y1,
+                #             "bbox_width": w,
+                #             "bbox_height": h,
+                #             "image_name": instance["image"],
+                #             "image_width": 1520,
+                #             "image_height": 870,
+                #         }
+                #     )
+                train_instances.append(instance)
             else:
                 # for annotation in instance["annotations"]:
                 #     x1, y1, w, h = annotation["bbox"]
@@ -77,11 +78,16 @@ def convert(input_dir:str, output_dir:str)->None:
 
     print(f"Writing to {output_dir}...")
     #Write to csv
-    with open(output_dir+"/train_annotations.csv", "w") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=list(train_instances[0].keys()))
-        writer.writeheader()
-        writer.writerows(train_instances)
+    # with open(output_dir+"/train_annotations.csv", "w") as csvfile:
+    #     writer = csv.DictWriter(csvfile, fieldnames=list(train_instances[0].keys()))
+    #     writer.writeheader()
+    #     writer.writerows(train_instances)
     
+    with open(output_dir+"/train_vlm.jsonl", "w") as trainfile:
+        for line in train_instances:
+            json_str = json.dumps(line)
+            trainfile.write(json_str+"\n")
+
     with open(output_dir+"/test_vlm.jsonl", "w") as testfile:
         for line in test_instances:
             json_str = json.dumps(line)

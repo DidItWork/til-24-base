@@ -180,7 +180,7 @@ class CustomDataset(Dataset):
         # return None
 
 
-        return img, ori_img.shape, self.ann_list[idx]["boxes"], self.ann_list[idx]["captions"], preprocess_caption(caption=" . ".join(set(self.ann_list[idx]["captions"])))
+        return img, ori_img.shape, self.ann_list[idx]["boxes"], self.ann_list[idx]["captions"], preprocess_caption(caption=" . ".join(self.ann_list[idx]["captions"]))
 
 def collate_fn(batch):
 
@@ -253,7 +253,16 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
                 counter += 1
     
     # Add optimizer
-    optimizer = optim.Adam(vlm_manager.model.parameters(), lr=1e-5, weight_decay=1e-4)
+    # optimizer = optim.AdamW([
+    #     {"params": vlm_manager.model.transformer.parameters()},
+    #     {"params": vlm_manager.model.feat_map.parameters()},
+    #     {"params": vlm_manager.model.input_proj.parameters()},
+    #     {"params": vlm_manager.model.backbone.parameters()},
+    #     # {"params": vlm_manager.model.bbox_embed.parameters()},
+    #     {"params": vlm_manager.model.class_embed.parameters()},
+    #     {"params": vlm_manager.model.bert.parameters(), "lr": 1e-5}], lr=1e-5, weight_decay=1e-4)
+
+    optimizer = optim.Adam(vlm_manager.model.parameters(), lr=1e-5)
 
     lr_scheduler = None
 
@@ -282,6 +291,22 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
+        
+            # if (idx+1)%200==0:
+            #     #test
+            #     vlm_manager.model.eval()
+                
+            #     with torch.inference_mode():
+            #         results = run_batched(test_instances)
+            #         # calculate eval
+            #         test_score = vlm_eval(
+            #             [truth["bbox"] for truth in truths],
+            #             [result["bbox"] for result in results],
+            #         )
+
+            #     vlm_manager.model.train()
+                
+            #     print(f"IoU@0.5: {test_score}, Best IoU@0.5: {best_score}")
 
             # print(f"Iter {idx}/{len(custom_dataloader)}, Loss: {loss.item()}")
 
@@ -317,7 +342,6 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
         if lr_scheduler is not None:
             lr_scheduler.step()
 
-        #test
         vlm_manager.model.eval()
         
         with torch.inference_mode():
@@ -346,4 +370,4 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
 
 
 if __name__=="__main__":
-    train(model=vlm_manager.model, ann_file=ann_file, epochs=20, save_path='/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights_b3')
+    train(model=vlm_manager.model, ann_file=ann_file, epochs=20, save_path='/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights_pls_work')
