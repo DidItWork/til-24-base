@@ -4,6 +4,7 @@ Grounding-Dino-FineTuning/
 GroundingDINO/
 mmdetection/
 weights/
+bert-base-uncased/
 
 # Checkpoints
 *.pt
