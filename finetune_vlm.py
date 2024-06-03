@@ -17,6 +17,8 @@ from typing import List, Dict, Any, Union
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
 # Model
 # model = load_model("/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/groundingdino/config/GroundingDINO_SwinT_OGC.py", "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swint_ogc.pth")
 
@@ -205,7 +207,7 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
 
     train_dataloader = DataLoader(dataset=train_data,
                                    batch_size=4,
-                                   num_workers=0,
+                                   num_workers=1,
                                    shuffle=True,
                                    collate_fn=collate_fn)
     
@@ -281,16 +283,17 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
         total_loss = 0
         for idx, batch in enumerate(tqdm(train_dataloader)):
 
-            optimizer.zero_grad()
-
-            loss = train_image_batch(
-                model=vlm_manager.model,
-                data_dict=batch
-            )
+            
+            with torch.autocast(device_type=device, dtype=torch.float16):
+                loss = train_image_batch(
+                    model=vlm_manager.model,
+                    data_dict=batch
+                )
 
             loss.backward()
             optimizer.step()
-            total_loss += loss.item()
+            optimizer.zero_grad()
+            total_loss += loss.detach().item()
         
             # if (idx+1)%200==0:
             #     #test
@@ -370,4 +373,4 @@ def train(model, ann_file, epochs=1, save_path='weights/model_weights',save_epoc
 
 
 if __name__=="__main__":
-    train(model=vlm_manager.model, ann_file=ann_file, epochs=20, save_path='/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights_pls_work')
+    train(model=vlm_manager.model, ann_file=ann_file, epochs=20, save_path='/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights_pls_work_b')

@@ -167,10 +167,10 @@ class VLMManager:
 
         
         # Grounding DINO
-        # config_file = "/home/benluo/til-24-base/vlm/src/GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
-        # checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swint_ogc.pth"  # change the path of the model
-        config_file = "GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
-        checkpoint_path = "model_weights.pth"  # change the path of the model
+        config_file = "/home/benluo/til-24-base/vlm/src/GroundingDINO_SwinB_cfg.py"  # change the path of the model config file
+        checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swinb_cogcoor.pth"  # change the path of the model
+        # config_file = "GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
+        # checkpoint_path = "model_weights.pth"  # change the path of the model
         self.box_threshold = 0.35
         self.text_threshold = 0.25
         self.token_spans = None
@@ -182,22 +182,22 @@ class VLMManager:
         # print(self.model)
 
         # Do not train image backbone
-        # for param in self.model.backbone.parameters():
-        #     param.requires_grad = False
+        for param in self.model.backbone.parameters():
+            param.requires_grad = False
 
-        # for param in self.model.transformer.encoder.layers.parameters():
-        #     param.requires_grad = False
+        for param in self.model.transformer.encoder.layers.parameters():
+            param.requires_grad = False
         
-        # for param in self.model.transformer.decoder.layers.parameters():
-        #     param.requires_grad = False
+        for param in self.model.transformer.decoder.layers.parameters():
+            param.requires_grad = False
         
-        # for module in self.model.transformer.decoder.layers:
-        #     for param in module.ca_text.parameters():
-        #         param.requires_grad = True
-        #     for param in module.catext_dropout.parameters():
-        #         param.requires_grad = True
-        #     for param in module.catext_norm.parameters():
-        #         param.requires_grad = True
+        for module in self.model.transformer.decoder.layers:
+            for param in module.ca_text.parameters():
+                param.requires_grad = True
+            for param in module.catext_dropout.parameters():
+                param.requires_grad = True
+            for param in module.catext_norm.parameters():
+                param.requires_grad = True
         
         # print(self.model)
         
