@@ -6,6 +6,10 @@ GroundingDINO/
 mmdetection/
 weights/
 bert-base-uncased/
+datasets/
+runs/
+
+*.zip
 
 # Checkpoints
 *.pt
