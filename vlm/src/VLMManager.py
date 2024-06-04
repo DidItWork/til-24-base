@@ -146,19 +146,19 @@ class VLMManager:
         
         # model_name = "Qwen/Qwen-VL-Chat-Int4"
         # model_name = "microsoft/kosmos-2-patch14-224"
-        # model_path = "google/owlv2-base-patch16-ensemble"
-        # processor_path = "google/owlv2-base-patch16-ensemble"
-        # model_path = "IDEA-Research/grounding-dino-tiny"
-        # processor_path = "IDEA-Research/grounding-dino-tiny"
+        model_path = "google/owlv2-base-patch16-ensemble"
+        processor_path = "google/owlv2-base-patch16-ensemble"
+        # model_path = "/home/benluo/til-24-base/owlv2_patch16_ft/checkpoint-400"
+        # processor_path = "/home/benluo/til-24-base/owlv2_patch16_ft/checkpoint-400"
         # weights_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights0.pth"
 
-        # self.image_width = 1520
-        # self.image_height = 870
+        self.image_width = 1520
+        self.image_height = 870
 
-        # self.target_sizes = torch.tensor([[self.image_height, self.image_width]])#
+        self.target_sizes = torch.tensor([[self.image_height, self.image_width]])#
 
-        # self.processor = AutoProcessor.from_pretrained(processor_path)
-        # self.model = Owlv2ForObjectDetection.from_pretrained(model_path).to(device)
+        self.processor = AutoProcessor.from_pretrained(processor_path)
+        self.model = Owlv2ForObjectDetection.from_pretrained(model_path).to(device)
 
         #HuggingFace Grounding DINO
 
@@ -167,37 +167,37 @@ class VLMManager:
 
         
         # Grounding DINO
-        config_file = "/home/benluo/til-24-base/vlm/src/GroundingDINO_SwinB_cfg.py"  # change the path of the model config file
-        checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swinb_cogcoor.pth"  # change the path of the model
-        # config_file = "GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
-        # checkpoint_path = "model_weights.pth"  # change the path of the model
-        self.box_threshold = 0.35
-        self.text_threshold = 0.25
-        self.token_spans = None
-        self.cpu_only = not torch.cuda.is_available()
+        # config_file = "/home/benluo/til-24-base/vlm/src/GroundingDINO_SwinB_cfg.py"  # change the path of the model config file
+        # checkpoint_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/groundingdino_swinb_cogcoor.pth"  # change the path of the model
+        # # config_file = "GroundingDINO_SwinT_OGC.py"  # change the path of the model config file
+        # # checkpoint_path = "model_weights.pth"  # change the path of the model
+        # self.box_threshold = 0.35
+        # self.text_threshold = 0.25
+        # self.token_spans = None
+        # self.cpu_only = not torch.cuda.is_available()
         
-        # #load model
-        self.model = load_model(config_file, checkpoint_path, cpu_only=self.cpu_only).to(device)
+        # # #load model
+        # self.model = load_model(config_file, checkpoint_path, cpu_only=self.cpu_only).to(device)
 
         # print(self.model)
 
         # Do not train image backbone
-        for param in self.model.backbone.parameters():
-            param.requires_grad = False
+        # for param in self.model.backbone.parameters():
+        #     param.requires_grad = False
 
-        for param in self.model.transformer.encoder.layers.parameters():
-            param.requires_grad = False
+        # for param in self.model.transformer.encoder.layers.parameters():
+        #     param.requires_grad = False
         
-        for param in self.model.transformer.decoder.layers.parameters():
-            param.requires_grad = False
+        # for param in self.model.transformer.decoder.layers.parameters():
+        #     param.requires_grad = False
         
-        for module in self.model.transformer.decoder.layers:
-            for param in module.ca_text.parameters():
-                param.requires_grad = True
-            for param in module.catext_dropout.parameters():
-                param.requires_grad = True
-            for param in module.catext_norm.parameters():
-                param.requires_grad = True
+        # for module in self.model.transformer.decoder.layers:
+        #     for param in module.ca_text.parameters():
+        #         param.requires_grad = True
+        #     for param in module.catext_dropout.parameters():
+        #         param.requires_grad = True
+        #     for param in module.catext_norm.parameters():
+        #         param.requires_grad = True
         
         # print(self.model)
         
@@ -217,15 +217,17 @@ class VLMManager:
         # image = Image.open(io.BytesIO(image))
 
         # # print(caption)
-
+        
         # inputs = self.processor(images=image, text=caption, return_tensors="pt").to(device)
-        # outputs = self.model(**inputs)
+        
+        # with torch.inference_mode():
+        #     outputs = self.model(**inputs)
 
-        # # convert outputs (bounding boxes and class logits) to COCO API
-        # target_sizes = torch.tensor([image.size[::-1]])
-        # results = self.processor.image_processor.post_process_object_detection(
-        #     outputs, threshold=0.1, target_sizes=target_sizes
-        # )[0]
+        #     # convert outputs (bounding boxes and class logits) to COCO API
+        #     target_sizes = torch.tensor([image.size[::-1]])
+        #     results = self.processor.image_processor.post_process_object_detection(
+        #         outputs, threshold=0.1, target_sizes=target_sizes
+        #     )[0]
 
         # if results["boxes"].shape[0] == 0:
         #     return [0,0,0,0]
@@ -237,22 +239,24 @@ class VLMManager:
         # return [x1, y1, x2-x1, y2-y1]
         #Transformers owl inference pipeline
 
-        # image = Image.open(io.BytesIO(image))
+        image = Image.open(io.BytesIO(image))
 
-        # inputs = self.processor(text=[[caption]], images=image, return_tensors="pt").to(device)
+        inputs = self.processor(text=[[caption]], images=image, return_tensors="pt").to(device)
 
-        # with torch.no_grad():
-        #     outputs = self.model(**inputs)
-        #     print(outputs)
-        #     predictions = self.processor.post_process_object_detection(outputs, threshold=0.0, target_sizes=self.target_sizes)[0]
+        # print(inputs["input_ids"].shape)
 
-        # if len(predictions["boxes"]):
-        #     bbox = predictions["boxes"][torch.argmax(predictions["scores"])].to(dtype=torch.int).tolist()
-        #     x1, y1, x2, y2 = bbox
-        # else:
-        #     return [0,0,0,0]
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+            # print(outputs)
+            predictions = self.processor.post_process_object_detection(outputs, threshold=0.0, target_sizes=self.target_sizes)[0]
 
-        # return [x1,y1,x2-x1,y2-y1]
+        if len(predictions["boxes"]):
+            bbox = predictions["boxes"][torch.argmax(predictions["scores"])].to(dtype=torch.int).tolist()
+            x1, y1, x2, y2 = bbox
+        else:
+            return [0,0,0,0]
+
+        return [x1,y1,x2-x1,y2-y1]
 
         #Grounding DINO
 

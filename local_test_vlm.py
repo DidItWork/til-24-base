@@ -29,34 +29,35 @@ def main():
     truths = []
     counter = 0
 
-    with open(input_dir / "test_vlm.jsonl", "r") as f:
+    with open(input_dir / "vlm.jsonl", "r") as f:
         for line in f:
-            if counter > 400:
+            if counter > 100:
                 break
             if line.strip() == "":
                 continue
             instance = json.loads(line.strip())
-            with open(input_dir / "images" / instance["image"], "rb") as file:
-                image_bytes = file.read()
-                # if counter%5==0:
-                # if instance["image"]=="image_4440.jpg":
-                for annotation in instance["annotations"]:
-                    instances.append(
-                        {
-                            "path": instance["image"],
-                            "key": counter,
-                            "caption": annotation["caption"],
-                            "b64": base64.b64encode(image_bytes).decode("ascii"),
-                        }
-                    )
-                    truths.append(
-                        {
-                            "key": counter,
-                            "caption": annotation["caption"],
-                            "bbox": annotation["bbox"],
-                        }
-                    )
-                counter += 1
+            if counter%4==1:
+                with open(input_dir / "images" / instance["image"], "rb") as file:
+                    image_bytes = file.read()
+                    # if counter%5==0:
+                    # if instance["image"]=="image_4440.jpg":
+                    for annotation in instance["annotations"]:
+                        instances.append(
+                            {
+                                "path": instance["image"],
+                                "key": counter,
+                                "caption": annotation["caption"],
+                                "b64": base64.b64encode(image_bytes).decode("ascii"),
+                            }
+                        )
+                        truths.append(
+                            {
+                                "key": counter,
+                                "caption": annotation["caption"],
+                                "bbox": annotation["bbox"],
+                            }
+                        )
+            counter += 1
 
     assert len(truths) == len(instances)
     results = run_batched(instances)
