@@ -87,15 +87,15 @@ def convert(input_dir:str, output_dir:str)->None:
 
     print(f"Writing to {output_dir}...")
     #Write to jsonl
-    with open(output_dir+"/train_class_vlm.jsonl", "w") as trainfile:
-        for line in train_instances:
-            json_str = json.dumps(line)
-            trainfile.write(json_str+"\n")
+    # with open(output_dir+"/train_class_vlm.jsonl", "w") as trainfile:
+    #     for line in train_instances:
+    #         json_str = json.dumps(line)
+    #         trainfile.write(json_str+"\n")
 
-    with open(output_dir+"/test_class_vlm.jsonl", "w") as testfile:
-        for line in test_instances:
-            json_str = json.dumps(line)
-            testfile.write(json_str+"\n")
+    # with open(output_dir+"/test_class_vlm.jsonl", "w") as testfile:
+    #     for line in test_instances:
+    #         json_str = json.dumps(line)
+    #         testfile.write(json_str+"\n")
 
 if __name__=="__main__":
 

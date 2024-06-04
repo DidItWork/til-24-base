@@ -8,6 +8,8 @@ weights/
 bert-base-uncased/
 datasets/
 runs/
+local/
+owl_vit_patch32_ft/
 
 *.zip
 
