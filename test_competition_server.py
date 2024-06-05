@@ -18,6 +18,8 @@ logger.addHandler(logging.StreamHandler())
 prefix: str = "results/"
 TEAM_NAME: str = os.getenv("TEAM_NAME", "team-name")
 
+print("comeptition server", TEAM_NAME)
+
 # filepath to load testcase data from
 filepath = "simulator/data/data.json"
 with open(filepath) as f:
@@ -168,6 +170,7 @@ async def team_endpoint(websocket: WebSocket, team_name: str):
 
 @app.websocket("/ws_auto/{team_name}")
 async def autonomy_endpoint(websocket: WebSocket, team_name: str):
+    print("I am here")
     await manager.autonomy_connect(websocket)
     try:
         while True:

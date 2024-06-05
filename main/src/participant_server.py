@@ -22,6 +22,7 @@ manager: FinalsManager = MockManager()
 
 async def server():
     index = 0
+    # print("running server")
     async for websocket in websockets.connect(
         quote(f"ws://{SERVER_IP}:{SERVER_PORT}/ws/{TEAM_NAME}", safe="/:"),
         max_size=2**24,
