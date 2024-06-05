@@ -18,7 +18,6 @@ class Environment(ABC):
         self.camera_yaw_min = -180  # in degrees (actual min controllable yaw is -250)
 
     async def _init_websocket(self) -> None:
-        print(self.uri)
         self.websocket = await websockets.connect(self.uri, max_size=2**24)
 
     def health(self) -> bool:
