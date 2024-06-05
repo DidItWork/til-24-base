@@ -36,7 +36,7 @@ def main():
             if line.strip() == "":
                 continue
             instance = json.loads(line.strip())
-            if counter%4==1:
+            if counter%4==0:
                 with open(input_dir / "images" / instance["image"], "rb") as file:
                     image_bytes = file.read()
                     # if counter%5==0:
