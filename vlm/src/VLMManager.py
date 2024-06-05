@@ -148,8 +148,8 @@ class VLMManager:
         # model_name = "microsoft/kosmos-2-patch14-224"
         model_path = "google/owlv2-base-patch16-ensemble"
         processor_path = "google/owlv2-base-patch16-ensemble"
-        model_path = "/home/benluo/til-24-base/checkpoint-4500"
-        processor_path = "/home/benluo/til-24-base/checkpoint-4500"
+        model_path = "/home/benluo/til-24-base/checkpoint-2000"
+        processor_path = "/home/benluo/til-24-base/checkpoint-2000"
         # weights_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights0.pth"
 
         self.image_width = 1520
