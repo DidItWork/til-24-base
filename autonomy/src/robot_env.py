@@ -35,7 +35,7 @@ class RobotEnv(Environment):
         def sub_data_handler(angle_info):
             _, self.camera_yaw, _, _ = angle_info
 
-            print(f"yaw: {self.camera_yaw}")
+            # print(f"yaw: {self.camera_yaw}")
             # responsible for updating the server
             self.loop.create_task(
                 self.send_websocket(
@@ -60,7 +60,7 @@ class RobotEnv(Environment):
         await RobotEnv.wait_for_action(self.robot.gimbal.move(yaw=change))
 
     async def reset_pan_cannon(self) -> None:
-        await RobotEnv.wait_for_action(self.robot.gimbal.moveto(yaw=0))
+        await RobotEnv.wait_for_action(self.robot.gimbal.moveto(yaw=0,pitch=15))
 
     async def exit(self) -> None:
         """
