@@ -68,6 +68,8 @@ def convert(input_dir:str, output_dir:str)->None:
 
             for annotation in instance["annotations"]:
                 x1, y1, w, h = annotation["bbox"]
+                if y1 < w:
+                    print
                 data_instance["objects"]["id"].append(object_id)
                 data_instance["objects"]["bbox"].append([1.0*x1, 1.0*y1, 1.0*w, 1.0*h]) #COCO Format
                 data_instance["objects"]["category"].append(class_to_id(annotation["caption"]))
