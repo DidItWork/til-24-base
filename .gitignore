@@ -6,6 +6,14 @@ GroundingDINO/
 mmdetection/
 weights/
 bert-base-uncased/
+datasets/
+local/
+owl_vit_patch32_ft/
+owlv2_patch16_ft/
+owlv2_patch32_ft/
+runs/
+
+*.zip
 
 # Checkpoints
 *.pt
