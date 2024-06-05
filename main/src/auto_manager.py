@@ -1,6 +1,7 @@
 from random import randint
 from typing import Dict, List
 from finals_manager import FinalsManager
+from base64 import b64encode
 
 
 class AutoManager(FinalsManager):
@@ -10,19 +11,28 @@ class AutoManager(FinalsManager):
 
     async def run_asr(self, audio_bytes: bytes) -> str:
         print("Running ASR")
-        return "asr"
+        audio_str = b64encode(audio_bytes).decode("ascii")
+        results = await self.async_post(
+            f"http://{self.local_ip}:5001/stt", json={"instances": [{"b64": audio_str}]}
+        )
+        return results.json()["predictions"][0]
 
     async def run_nlp(self, transcript: str) -> Dict[str, str]:
         print("Running NLP")
-        return {
-            "target": "airplane",
-            "heading": f"{randint(1,360):03}",
-            "tool": "surface-to-air missiles",
-        }
+        results = await self.async_post(
+            f"http://{self.local_ip}:5002/extract",
+            json={"instances": [{"transcript": transcript}]},
+        )
+        return results.json()["predictions"][0]
 
     async def run_vlm(self, image_bytes: bytes, caption: str) -> List[int]:
         print("Running VLM")
-        return [0, 0, 0, 0]
+        image_str = b64encode(image_bytes).decode("ascii")
+        results = await self.async_post(
+            f"http://{self.local_ip}:5004/identify",
+            json={"instances": [{"b64": image_str, "caption": caption}]},
+        )
+        return results.json()["predictions"][0]
 
     async def send_heading(self, heading: str) -> bytes:
         assert heading.isdigit(), "The heading string contains non-digit characters"

@@ -91,6 +91,8 @@ class MockConnectionManager:
             self.autonomy_connection = websocket
 
     async def update_simulator(self, websocket: WebSocket, team_name: int, data: dict):
+        print(data)
+        print(self.simulator_connection is not None)
         if self.simulator_connection is not None:
             await self.simulator_connection.send_json({"name": team_name, **data})
             if data["type"] == "snapshot":
@@ -170,7 +172,6 @@ async def team_endpoint(websocket: WebSocket, team_name: str):
 
 @app.websocket("/ws_auto/{team_name}")
 async def autonomy_endpoint(websocket: WebSocket, team_name: str):
-    print("I am here")
     await manager.autonomy_connect(websocket)
     try:
         while True:
