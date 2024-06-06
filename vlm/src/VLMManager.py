@@ -5,6 +5,7 @@ from PIL import Image
 import io
 from numpy import argmax
 import numpy as np
+from torchvision.ops import nms
 # import albumentations as A
 # import supervision as sv
 
@@ -148,14 +149,14 @@ class VLMManager:
         # model_name = "microsoft/kosmos-2-patch14-224"
         model_path = "google/owlv2-base-patch16-ensemble"
         processor_path = "google/owlv2-base-patch16-ensemble"
-        model_path = "/home/benluo/til-24-base/checkpoint-2000"
-        processor_path = "/home/benluo/til-24-base/checkpoint-2000"
+        model_path = "/home/benluo/til-24-base/local/owlv2_patch16_ft_ln/checkpoint-9000"
+        processor_path = "/home/benluo/til-24-base/local/owlv2_patch16_ft_ln/checkpoint-9000"
         # weights_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights0.pth"
 
         self.image_width = 1520
         self.image_height = 870
 
-        self.target_sizes = torch.tensor([[self.image_height, self.image_width]])#
+        self.target_sizes = torch.tensor([[self.image_height, self.image_width]])
 
         self.processor = AutoProcessor.from_pretrained(processor_path)
         self.model = Owlv2ForObjectDetection.from_pretrained(model_path).to(device)
@@ -239,19 +240,35 @@ class VLMManager:
         # return [x1, y1, x2-x1, y2-y1]
         #Transformers owl inference pipeline
 
+        print(caption)
+
         image = Image.open(io.BytesIO(image))
 
-        inputs = self.processor(text=[[caption]], images=image, return_tensors="pt").to(device)
+        inputs = self.processor(text=[caption, "background"], images=image, return_tensors="pt").to(device)
 
         # print(inputs["input_ids"].shape)
 
         with torch.no_grad():
             outputs = self.model(**inputs)
             # print(outputs)
-            predictions = self.processor.post_process_object_detection(outputs, threshold=0.0, target_sizes=self.target_sizes)[0]
+            predictions = self.processor.post_process_object_detection(outputs, threshold=0.5, target_sizes=self.target_sizes)[0]
 
-        if len(predictions["boxes"]):
-            bbox = predictions["boxes"][torch.argmax(predictions["scores"])].to(dtype=torch.int).tolist()
+        predictions["boxes"] = predictions["boxes"].cpu()
+        predictions["scores"] = predictions["scores"].cpu()
+        predictions["labels"] = predictions["labels"].cpu()
+
+        label_idx = (predictions["labels"]==0).nonzero().flatten()
+
+        if label_idx.shape[0] > 0:
+            # print(label_idx)
+            # print(label_idx)
+            # print(predictions["boxes"])
+            bbox = nms(predictions["boxes"][label_idx], predictions["scores"][label_idx], iou_threshold=0.5)
+            print(predictions["boxes"][label_idx][bbox])
+            print(predictions["scores"][label_idx][bbox])
+            # bbox = predictions["boxes"][label_idx][bbox][argmax(predictions["scores"][label_idx][bbox])].to(dtype=torch.int).tolist()
+            bbox = predictions["boxes"][label_idx][bbox][0].to(dtype=torch.int).tolist()
+            # bbox = predictions["boxes"][label_idx][torch.argmax()]
             x1, y1, x2, y2 = bbox
         else:
             return [0,0,0,0]
