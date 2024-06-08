@@ -66,7 +66,7 @@ def load_model(model_config_path, model_checkpoint_path, cpu_only=False):
     args = SLConfig.fromfile(model_config_path)
     args.device = "cuda" if not cpu_only else "cpu"
     model = build_model(args)
-    print(model)
+    # print(model)
     checkpoint = torch.load(model_checkpoint_path, map_location="cpu")
     if "model" in checkpoint:
         load_res = model.load_state_dict(clean_state_dict(checkpoint["model"]), strict=False)

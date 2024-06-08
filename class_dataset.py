@@ -62,17 +62,17 @@ def convert(input_dir:str, output_dir:str)->None:
                     "id":[],
                     "area":[],
                     "bbox":[],
-                    "category":[]
+                    "category":[],
+                    "caption":[]
                 },
             }
 
-            for annotation in instance["annotations"]:
+            for idx, annotation in enumerate(instance["annotations"]):
                 x1, y1, w, h = annotation["bbox"]
-                if y1 < w:
-                    print
                 data_instance["objects"]["id"].append(object_id)
                 data_instance["objects"]["bbox"].append([1.0*x1, 1.0*y1, 1.0*w, 1.0*h]) #COCO Format
-                data_instance["objects"]["category"].append(class_to_id(annotation["caption"]))
+                data_instance["objects"]["category"].append(idx)
+                data_instance["objects"]["caption"].append(annotation["caption"])
                 data_instance["objects"]["area"].append(w*h)
                 
                 object_id+=1
@@ -89,15 +89,15 @@ def convert(input_dir:str, output_dir:str)->None:
 
     print(f"Writing to {output_dir}...")
     #Write to jsonl
-    # with open(output_dir+"/train_class_vlm.jsonl", "w") as trainfile:
-    #     for line in train_instances:
-    #         json_str = json.dumps(line)
-    #         trainfile.write(json_str+"\n")
+    with open(output_dir+"/train_caption_vlm.jsonl", "w") as trainfile:
+        for line in train_instances:
+            json_str = json.dumps(line)
+            trainfile.write(json_str+"\n")
 
-    # with open(output_dir+"/test_class_vlm.jsonl", "w") as testfile:
-    #     for line in test_instances:
-    #         json_str = json.dumps(line)
-    #         testfile.write(json_str+"\n")
+    with open(output_dir+"/test_caption_vlm.jsonl", "w") as testfile:
+        for line in test_instances:
+            json_str = json.dumps(line)
+            testfile.write(json_str+"\n")
 
 if __name__=="__main__":
 
