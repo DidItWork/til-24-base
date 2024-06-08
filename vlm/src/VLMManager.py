@@ -5,13 +5,13 @@ from PIL import Image
 import io
 from numpy import argmax
 import numpy as np
-from torchvision.ops import nms
+# from torchvision.ops import nms
 # import albumentations as A
 # import supervision as sv
 
 import groundingdino.datasets.transforms as T
 from groundingdino.models import build_model
-from groundingdino.util import box_ops
+# from groundingdino.util import box_ops
 from groundingdino.util.inference import predict, annotate
 from groundingdino.util.slconfig import SLConfig
 from groundingdino.util.utils import clean_state_dict, get_phrases_from_posmap
@@ -147,10 +147,12 @@ class VLMManager:
         
         # model_name = "Qwen/Qwen-VL-Chat-Int4"
         # model_name = "microsoft/kosmos-2-patch14-224"
-        model_path = "google/owlv2-base-patch16-ensemble"
-        processor_path = "google/owlv2-base-patch16-ensemble"
-        model_path = "/home/benluo/til-24-base/local/owlv2_patch16_ft_ln/checkpoint-9000"
-        processor_path = "/home/benluo/til-24-base/local/owlv2_patch16_ft_ln/checkpoint-9000"
+        # model_path = "google/owlv2-base-patch16-ensemble"
+        # processor_path = "google/owlv2-base-patch16-ensemble"
+        # model_path = "/home/benluo/til-24-base/local/owlv2_patch16_ft_captioned/checkpoint-13000"
+        # processor_path = "/home/benluo/til-24-base/local/owlv2_patch16_ft_captioned/checkpoint-13000"
+        model_path = "owlv2"
+        processor_path = "owlv2"
         # weights_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights0.pth"
 
         self.image_width = 1520
@@ -240,35 +242,35 @@ class VLMManager:
         # return [x1, y1, x2-x1, y2-y1]
         #Transformers owl inference pipeline
 
-        print(caption)
+        # print(caption)
 
         image = Image.open(io.BytesIO(image))
 
-        inputs = self.processor(text=[caption, "background"], images=image, return_tensors="pt").to(device)
+        inputs = self.processor(text=[caption], images=image, return_tensors="pt").to(device)
 
         # print(inputs["input_ids"].shape)
 
         with torch.no_grad():
             outputs = self.model(**inputs)
             # print(outputs)
-            predictions = self.processor.post_process_object_detection(outputs, threshold=0.5, target_sizes=self.target_sizes)[0]
+            predictions = self.processor.post_process_object_detection(outputs, threshold=0.1, target_sizes=self.target_sizes)[0]
 
         predictions["boxes"] = predictions["boxes"].cpu()
         predictions["scores"] = predictions["scores"].cpu()
         predictions["labels"] = predictions["labels"].cpu()
 
-        label_idx = (predictions["labels"]==0).nonzero().flatten()
+        # label_idx = (predictions["labels"]==0).nonzero().flatten()
 
-        if label_idx.shape[0] > 0:
+        if predictions["labels"].shape[0] > 0:
             # print(label_idx)
             # print(label_idx)
             # print(predictions["boxes"])
-            bbox = nms(predictions["boxes"][label_idx], predictions["scores"][label_idx], iou_threshold=0.5)
-            print(predictions["boxes"][label_idx][bbox])
-            print(predictions["scores"][label_idx][bbox])
-            # bbox = predictions["boxes"][label_idx][bbox][argmax(predictions["scores"][label_idx][bbox])].to(dtype=torch.int).tolist()
-            bbox = predictions["boxes"][label_idx][bbox][0].to(dtype=torch.int).tolist()
-            # bbox = predictions["boxes"][label_idx][torch.argmax()]
+            # bbox = nms(predictions["boxes"][label_idx], predictions["scores"][label_idx], iou_threshold=0.5)
+            # print(predictions["boxes"][label_idx][bbox])
+            # print(predictions["scores"][label_idx][bbox])
+            # # bbox = predictions["boxes"][label_idx][bbox][argmax(predictions["scores"][label_idx][bbox])].to(dtype=torch.int).tolist()
+            # bbox = predictions["boxes"][label_idx][bbox][0].to(dtype=torch.int).tolist()
+            bbox = predictions["boxes"][argmax(predictions["scores"])].to(dtype=torch.int).tolist()
             x1, y1, x2, y2 = bbox
         else:
             return [0,0,0,0]

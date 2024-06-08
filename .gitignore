@@ -12,6 +12,7 @@ local/
 owl_vit_patch32_ft/
 owlv2_patch16_ft/
 owlv2_patch32_ft/
+owlv2/
 
 *.zip
 

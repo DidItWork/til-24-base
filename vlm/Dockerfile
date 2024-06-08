@@ -31,7 +31,7 @@ COPY src .
 
 # Grounding DINO Setup
 # RUN git clone https://github.com/IDEA-Research/GroundingDINO.git
-RUN cd GroundingDINO && pip install -e .
+# RUN cd GroundingDINO && pip install -e .
 
 # start model service
 CMD uvicorn api_service:app --port 5004 --host 0.0.0.0
