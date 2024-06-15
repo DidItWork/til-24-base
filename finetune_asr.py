@@ -19,7 +19,6 @@ from torch.utils.data import Dataset, random_split
 import evaluate
 from dataclasses import dataclass
 
-
 load_dotenv()
 
 TEAM_NAME = os.getenv("TEAM_NAME")
@@ -188,7 +187,7 @@ def main():
     trainer = Seq2SeqTrainer(
         args=training_args,
         model=model,
-        train_dataset=all_instances,
+        train_dataset=train_set,
         eval_dataset=test_set,
         data_collator=data_collator,
         compute_metrics=compute_metrics,

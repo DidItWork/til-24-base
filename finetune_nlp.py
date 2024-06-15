@@ -7,16 +7,12 @@ import os
 # Third-party imports
 import torch
 from sklearn.metrics import accuracy_score
-from transformers import (BertTokenizer, T5ForConditionalGeneration,
-                          AutoTokenizer, EncoderDecoderModel, BertModel,
-                          Seq2SeqTrainer, Seq2SeqTrainingArguments,
-                          BertGenerationEncoder, BertGenerationDecoder,
-                          DataCollatorWithPadding)
+from transformers import (AutoTokenizer, EncoderDecoderModel,
+                          Seq2SeqTrainer, Seq2SeqTrainingArguments)
 from datasets import Dataset
 from torch.utils.data import random_split
 
 from pathlib import Path
-from dataclasses import dataclass
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
@@ -68,13 +64,6 @@ def prepare_data(json_file:str = "", data_root:Any = None, tokenizer=None) -> Da
             
     input_tokenized = tokenizer(input_text, padding="max_length", truncation=True, max_length=64, return_tensors="pt")
     output_tokenized = tokenizer(output_text, padding="max_length", truncation=True, max_length=64, return_tensors="pt")
-
-    # print(input_text[0])
-    # print(output_text[0])
-
-    # print(input_tokenized.input_ids[0])
-    # print(input_tokenized.attention_mask[0])
-    # print(output_tokenized.input_ids[0])
     
     return Dataset.from_dict({
         "input_ids": input_tokenized.input_ids,
@@ -82,37 +71,9 @@ def prepare_data(json_file:str = "", data_root:Any = None, tokenizer=None) -> Da
         "labels": output_tokenized.input_ids,
     })
 
-# @dataclass
-# class DataCollator:
-
-#     def __call__(self, features: List[Dict]) -> Dict[str, torch.Tensor]:
-
-#         batch = dict()
-
-#         batch["input_ids"] = torch.cat([feature["input_ids"] for feature in features],dim=0)
-#         batch["labels"] = torch.cat([feature["labels"] for feature in features],dim=0)
-#         batch["labels"] = labels_batch["input_ids"].masked_fill(labels_batch.attention_mask.ne(1), -100)
-#         batch["attention_mask"] = torch.cat([feature["attention_mask"] for feature in features],dim=0)
-        
-
-#         return batch
 
 # Load tokenizer and model
 tokenizer = AutoTokenizer.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_mail")
-# tokenizer = AutoTokenizer.from_pretrained('google/byt5-small')
-
-# use BERT's cls token as BOS token and sep token as EOS token
-# encoder = BertGenerationEncoder.from_pretrained("google-bert/bert-base-cased", bos_token_id=101, eos_token_id=102)
-# # add cross attention layers and use BERT's cls token as BOS token and sep token as EOS token
-# decoder = BertGenerationDecoder.from_pretrained(
-#     "google-bert/bert-base-cased", add_cross_attention=True, is_decoder=True, bos_token_id=101, eos_token_id=102
-# )
-# bert2bert = EncoderDecoderModel(encoder=encoder, decoder=decoder)
-# model = T5ForConditionalGeneration.from_pretrained('google/byt5-small')
-
-# bert2bert = EncoderDecoderModel.from_encoder_decoder_pretrained("google-bert/bert-base-cased", "google-bert/bert-base-cased")
-
-# bert2bert = BertModel.from_pretrained("bert-base-cased")
 model = EncoderDecoderModel.from_pretrained("patrickvonplaten/bert2bert_cnn_daily_mail")
 
 
@@ -123,26 +84,9 @@ model.config.min_length = 0
 model.config.max_length = 64
 model.config.length_penalty = 0.0
 
-# text1 = "La economía circular se ha convertido en una tendencia prometedora y vital. Alberto Rodríguez ha estado trabajando con baterías eléctricas desde el año 2010"
-# output1 = "La economía circular@@@se ha convertido en@@@una tendencia prometedora y vital |||  Alberto Rodríguez@@ha estado trabajando con@@baterías eléctricas desde el año 2010"
-
-# text2= """se reciclan baterías usadas desde el año 2013. planta de Nissan reciclan baterías usadas
-# Carlos Ghosn habló la visión de la empresa de reducir el impacto negativo de sus productos en el medio ambiente. Carlos Ghosn Destacó el uso de baterías eléctricas es fundamental para reducir significativamente las emisiones de CO2
-# su equipo profesional se esfuerza en desarrollar tecnologías más avanzadas. María Fernández Nacida en 1987 en Barcelona
-# La economía circular de las baterías eléctricas es beneficiosa para el medio ambiente. Otra empresa trabaja en la economía circular de las baterías eléctricas
-# Umicore es especialista en la fabricación y reciclaje de baterías. Umicore abrió una planta de reciclaje de baterías de iones de litio en Bélgica en 2019"""
-
-# output2="""se reciclan@@@baterías usadas@@@desde el año 2013. planta de Nissan@@@reciclan@@@baterías usadas
-# Carlos Ghosn@@@habló@@@la visión de la empresa de reducir el impacto negativo de sus productos en el medio ambiente. Carlos Ghosn@@@Destacó@@@el uso de baterías eléctricas es fundamental para reducir significativamente las emisiones de CO2
-# su equipo profesional@@@se esfuerza en desarrollar@@@tecnologías más avanzadas. María Fernández@@@Nacida en@@@1987 en Barcelona
-# La economía circular de las baterías eléctricas@@@es@@@beneficiosa para el medio ambiente. Otra empresa@@@trabaja@@@en la economía circular de las baterías eléctricas
-# Umicore@@@es especialista en@@@la fabricación y reciclaje de baterías. Umicore@@@abrió@@@una planta de reciclaje de baterías de iones de litio en Bélgica en 2019"""
-
 all_data = prepare_data(json_file="nlp.jsonl", data_root=Path(f"data/"), tokenizer=tokenizer)
 
 train_data, test_data = random_split(all_data, [0.8, 0.2])
-
-print(all_data)
 
 # Training arguments
 training_args = Seq2SeqTrainingArguments(
