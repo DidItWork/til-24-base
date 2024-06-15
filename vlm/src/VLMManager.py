@@ -9,13 +9,13 @@ import numpy as np
 # import albumentations as A
 # import supervision as sv
 
-import groundingdino.datasets.transforms as T
-from groundingdino.models import build_model
+# import groundingdino.datasets.transforms as T
+# from groundingdino.models import build_model
 # from groundingdino.util import box_ops
-from groundingdino.util.inference import predict, annotate
-from groundingdino.util.slconfig import SLConfig
-from groundingdino.util.utils import clean_state_dict, get_phrases_from_posmap
-from groundingdino.util.vl_utils import create_positive_map_from_span
+# from groundingdino.util.inference import predict, annotate
+# from groundingdino.util.slconfig import SLConfig
+# from groundingdino.util.utils import clean_state_dict, get_phrases_from_posmap
+# from groundingdino.util.vl_utils import create_positive_map_from_span
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -149,10 +149,10 @@ class VLMManager:
         # model_name = "microsoft/kosmos-2-patch14-224"
         # model_path = "google/owlv2-base-patch16-ensemble"
         # processor_path = "google/owlv2-base-patch16-ensemble"
-        # model_path = "/home/benluo/til-24-base/local/owlv2_patch16_ft_captioned/checkpoint-13000"
-        # processor_path = "/home/benluo/til-24-base/local/owlv2_patch16_ft_captioned/checkpoint-13000"
-        model_path = "owlv2"
-        processor_path = "owlv2"
+        model_path = "/home/benluo/til-24-base/local/owlv2_patch16_ft_captioned_exp/checkpoint-55000"
+        processor_path = "/home/benluo/til-24-base/local/owlv2_patch16_ft_captioned_exp/checkpoint-55000"
+        # model_path = "owlv2"
+        # processor_path = "owlv2"
         # weights_path = "/home/benluo/til-24-base/vlm/Grounding-Dino-FineTuning/weights/model_weights0.pth"
 
         self.image_width = 1520
@@ -246,12 +246,21 @@ class VLMManager:
 
         image = Image.open(io.BytesIO(image))
 
+        image = np.array(image.convert("RGB"))[:, :, ::-1]
+
         inputs = self.processor(text=[caption], images=image, return_tensors="pt").to(device)
 
         # print(inputs["input_ids"].shape)
 
         with torch.no_grad():
             outputs = self.model(**inputs)
+
+            classes = outputs["logits"].shape[-1]
+            
+            # outputs["logits"] += outputs["objectness_logits"].unsqueeze(-1).repeat(1,1,classes)
+            
+            # outputs["logits"] /= 2
+
             # print(outputs)
             predictions = self.processor.post_process_object_detection(outputs, threshold=0.1, target_sizes=self.target_sizes)[0]
 
@@ -260,6 +269,7 @@ class VLMManager:
         predictions["labels"] = predictions["labels"].cpu()
 
         # label_idx = (predictions["labels"]==0).nonzero().flatten()
+        # print(predictions)
 
         if predictions["labels"].shape[0] > 0:
             # print(label_idx)

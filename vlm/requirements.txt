@@ -13,7 +13,7 @@ accelerate
 uvicorn[standard]
 
 # #Qwen
-# transformers
+transformers
 # tiktoken
 # einops
 # transformers_stream_generator==0.0.4
