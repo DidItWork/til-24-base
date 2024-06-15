@@ -90,7 +90,7 @@ train_data, test_data = random_split(all_data, [0.8, 0.2])
 
 # Training arguments
 training_args = Seq2SeqTrainingArguments(
-    output_dir="/home/benluo/til-24-base/nlp/weights/nlp-ft",
+    output_dir="weights/nlp-ft",
     per_device_train_batch_size=16,
     gradient_accumulation_steps=1,  # increase by 2x for every 2x decrease in batch size
     learning_rate=1e-5,
